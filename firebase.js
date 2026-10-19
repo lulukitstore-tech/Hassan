@@ -14,3 +14,7 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+// 1) Firebase Console → Project settings → Cloud Messaging → Web Push certificates → Generate key pair → key yahan paste karo
+export const VAPID = "BAgsx5HtpMIwIpnTn0hN8Ad1C8G7e7wrvDrYa8B7eCvR4-ZUfUOQz2hSCEZGpj2gfVnrGas6InMqag6n6sMvB14";
+// 2) Cloudflare Worker ka URL yahan paste karo (worker.js deploy karne ke baad)
+export const PUSH_URL = "https://odd-cloud-291a.lulukitstore.workers.dev";
