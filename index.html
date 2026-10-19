@@ -1,56 +1,72 @@
-<!DOCTYPE html><html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!DOCTYPE html><html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Lulu Kit Store</title><link rel="icon" href="logo.jpg"><link rel="stylesheet" href="style.css"></head><body>
-<header><img src="logo.jpg" alt=""><b>Lulu Kit Store</b></header>
-<div id="toast"></div>
-<main><input id="q" placeholder='Search "doodh", "chips"...' style="width:100%"><div id="err"></div>
+<header><img src="logo.jpg" alt=""><b>Lulu Kit Store</b></header><div id="toast"></div>
+<main>
+<section id="vh"><input id="q" placeholder='Search "doodh", "chips"...' class="view-in"><div id="err"></div>
 <div id="home"><h2>Grocery & Kitchen</h2><div class="tiles" id="t1"></div><h2>Snacks & Drinks</h2><div class="tiles" id="t2"></div><h2>🔥 Hot deals</h2><div class="grid" id="deals"></div></div>
-<div id="list" style="display:none"><div class="row"><button data-c="">← Back</button><h2 id="ct" style="margin:0"></h2><span></span></div><div class="grid" id="grid"></div></div></main>
-<div class="drawer" id="cart"><div class="row"><h3>Your Cart</h3><button onclick="show()">✕</button></div><div id="items"></div>
-<h4 id="tot"></h4><input id="nm" placeholder="Naam"><input id="ph" placeholder="Phone" type="tel"><textarea id="ad" placeholder="Poora address"></textarea>
-<button class="btn" style="width:100%" onclick="place()">Order Place Karo (Cash on Delivery)</button></div>
-<div class="drawer" id="ord"><div class="row"><h3>Mere Orders</h3><button onclick="show()">✕</button></div><div id="olist"></div></div>
-<nav id="nav"><button data-h="1">🏠<small>Home</small></button><button onclick="show('ord')">📦<small>My Orders</small></button><button onclick="show('cart')">🛒<small>Cart (<span id="cc">0</span>)</small></button></nav>
+<div id="list" style="display:none"><div class="row"><button data-c="">← Back</button><h2 id="ct" style="margin:0"></h2><span></span></div><div class="grid" id="grid"></div></div></section>
+<section id="vc" style="display:none"><h2>🛒 Your Cart</h2><div id="items"></div><h4 id="tot"></h4>
+<input id="nm" placeholder="Naam" class="view-in"><input id="ph" placeholder="Phone" type="tel" class="view-in"><textarea id="ad" placeholder="Poora address" class="view-in"></textarea>
+<button class="btn" style="width:100%" onclick="place()">Order Place Karo (Cash on Delivery)</button></section>
+<section id="vo" style="display:none"><h2>📦 Mere Orders</h2><div id="olist"></div></section>
+<section id="vp" style="display:none"><h2>👤 Profile</h2><div class="box" id="acc"></div>
+<div class="box"><h4>Meri details</h4><input id="pn" placeholder="Naam" class="view-in"><input id="pph" type="tel" placeholder="Phone" class="view-in"><textarea id="pad" placeholder="Ghar ka address" class="view-in"></textarea><button class="btn" onclick="sp()">Save</button></div>
+<div class="box" id="psaved"></div></section>
+</main>
+<nav id="nav"><button data-v="h" class="on">🏠<small>Home</small></button><button data-v="o">📦<small>Orders</small></button><button data-v="c">🛒<small>Cart (<span id="cc">0</span>)</small></button><button data-v="p">👤<small>Profile</small></button></nav>
 <script type="module">
 import {db,auth} from "./firebase.js";
-import {signInAnonymously} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import {doc,collection,onSnapshot,addDoc,query,where,orderBy,limit,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import {onAuthStateChanged,signInAnonymously,signOut,GoogleAuthProvider,linkWithPopup,signInWithPopup} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {doc,setDoc,collection,onSnapshot,addDoc,query,where,orderBy,limit,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {G,SN} from "./cats.js";
 const $=id=>document.getElementById(id),EM={};[...G,...SN].forEach(c=>EM[c[0]]=c[1]);
-const IDX={};const pics=p=>p.imgs?.length?p.imgs:(p.img?[p.img]:[]);let FEE=0,FREE=0;const fe=s=>s>0?(FREE>0&&s>=FREE?0:FEE):0;let P=[],cart={},cat="",uid=null,seen={},t0=Date.now();
+const E=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const IDX={},pics=p=>p.imgs?.length?p.imgs:(p.img?[p.img]:[]);let FEE=0,FREE=0;const fe=s=>s>0?(FREE>0&&s>=FREE?0:FEE):0;
+let P=[],cart={},cat="",uid=null,seen={},t0=Date.now(),un=[],nb=0,PR={};
 const err=m=>{$("err").style.display="block";$("err").textContent=m};
-window.show=id=>{["cart","ord"].forEach(x=>$(x).classList.toggle("on",x===id))};
+function go(v){["h","c","o","p"].forEach(x=>$("v"+x).style.display=x==v?"block":"none");document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.v==v));scrollTo(0,0)}
 function toast(m){$("toast").textContent=m;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",5000);
  if("Notification"in window&&Notification.permission==="granted")new Notification("Lulu Kit Store",{body:m,icon:"logo.jpg"})}
-const card=p=>`<div class="card">${pics(p).length?`<div class="ph"><img src="${pics(p)[IDX[p.id]||0]}" data-n="${p.id}">${pics(p).length>1?`<i>${(IDX[p.id]||0)+1}/${pics(p).length}</i>`:""}${p.mrp>p.price?`<span class="off">${Math.round((p.mrp-p.price)/p.mrp*100)}% OFF</span>`:""}</div>`:`<div class="emo">${EM[p.category]||"🛒"}</div>`}<b>${p.name}</b><small>${p.unit||""}</small>
+const card=p=>`<div class="card">${pics(p).length?`<div class="ph"><img src="${pics(p)[IDX[p.id]||0]}" data-n="${p.id}">${pics(p).length>1?`<i>${(IDX[p.id]||0)+1}/${pics(p).length}</i>`:""}${p.mrp>p.price?`<span class="off">${Math.round((p.mrp-p.price)/p.mrp*100)}% OFF</span>`:""}</div>`:`<div class="emo">${EM[p.category]||"🛒"}</div>`}<b>${E(p.name)}</b><small>${E(p.unit)}</small>
  <div class="r"><span>₹${p.price} ${p.mrp>p.price?`<s>₹${p.mrp}</s>`:""}</span>${p.stock===false?"<small>Out</small>":cart[p.id]?`<span><button data-m="${p.id}">−</button> ${cart[p.id].q} <button data-a="${p.id}">+</button></span>`:`<button class="btn" data-a="${p.id}">ADD</button>`}</div></div>`;
 const tile=c=>`<div class="tile" data-c="${c[0]}"><div class="ti">${c[1]}</div>${c[0]}</div>`;
 function draw(){const s=$("q").value.toLowerCase(),home=!cat&&!s;
  $("home").style.display=home?"block":"none";$("list").style.display=home?"none":"block";
  if(home){$("t1").innerHTML=G.map(tile).join("");$("t2").innerHTML=SN.map(tile).join("");
-  const d=P.filter(p=>p.mrp>p.price&&p.stock!==false).slice(0,8);$("deals").innerHTML=d.map(card).join("")||"<small>Admin se products daalne ke baad yahan deals dikhenge</small>"}
+  const d=P.filter(p=>p.mrp>p.price&&p.stock!==false).slice(0,8);$("deals").innerHTML=d.map(card).join("")||"<small>Abhi deals nahi hain</small>"}
  else{$("ct").textContent=cat||"Search";$("grid").innerHTML=P.filter(p=>(!cat||p.category==cat)&&p.name.toLowerCase().includes(s)).map(card).join("")||"Is category me abhi saman nahi hai"}}
-function drawCart(){const l=Object.values(cart),sub=l.reduce((a,b)=>a+b.price*b.q,0),fee=fe(sub),sv=l.reduce((a,b)=>a+Math.max((b.mrp||b.price)-b.price,0)*b.q,0);$("cc").textContent=l.reduce((a,b)=>a+b.q,0);
- $("items").innerHTML=l.map(i=>`<div class="row"><span>${i.name} × ${i.q}</span><b>₹${i.price*i.q}</b></div>`).join("")||"Cart khali hai";
+function drawCart(){const l=Object.values(cart),sub=l.reduce((a,b)=>a+b.price*b.q,0),fee=fe(sub),sv=l.reduce((a,b)=>a+Math.max((b.mrp||b.price)-b.price,0)*b.q,0);
+ $("cc").textContent=l.reduce((a,b)=>a+b.q,0);
+ $("items").innerHTML=l.map(i=>`<div class="row"><span>${E(i.name)} × ${i.q}</span><b>₹${i.price*i.q}</b></div>`).join("")||"Cart khali hai";
  $("tot").innerHTML=`Subtotal: ₹${sub}<br>Delivery: ${l.length?(fee?"₹"+fee:"FREE 🎉"):"-"}<br><b>Total: ₹${sub+fee}</b>${sv?`<br><small style="color:var(--g)">Aapki bachat: ₹${sv}</small>`:""}`}
-document.addEventListener("click",e=>{if(e.target.closest("[data-h]")){cat="";$("q").value="";show();scrollTo(0,0)}const c=e.target.closest("[data-c]");if(c){cat=c.dataset.c;$("q").value="";scrollTo(0,0)}
- const d=e.target.dataset;if(d.n){const p=P.find(x=>x.id==d.n);IDX[d.n]=((IDX[d.n]||0)+1)%pics(p).length}if(d.a){const p=P.find(x=>x.id==d.a);cart[p.id]=cart[p.id]||{...p,q:0};cart[p.id].q++}
+document.addEventListener("click",e=>{const v=e.target.closest("[data-v]");if(v){if(v.dataset.v=="h"){cat="";$("q").value=""}go(v.dataset.v)}
+ const c=e.target.closest("[data-c]");if(c){cat=c.dataset.c;$("q").value="";go("h")}
+ const d=e.target.dataset;if(d.n){const p=P.find(x=>x.id==d.n);IDX[d.n]=((IDX[d.n]||0)+1)%pics(p).length}
+ if(d.a){const p=P.find(x=>x.id==d.a);cart[p.id]=cart[p.id]||{...p,q:0};cart[p.id].q++}
  if(d.m){if(--cart[d.m].q<=0)delete cart[d.m]}draw();drawCart()});
-$("q").oninput=draw;
+$("q").oninput=()=>{go("h");draw()};
 window.place=async()=>{const items=Object.values(cart).map(i=>({id:i.id,name:i.name,price:i.price,q:i.q}));const sub=items.reduce((a,b)=>a+b.price*b.q,0);
- if(!items.length||!$("nm").value||!$("ph").value||!$("ad").value)return alert("Cart aur details poori bharo");
+ if(!items.length||!$("nm").value||!$("ph").value||!$("ad").value)return alert("Cart aur details poori bharo (ya Profile me save karo)");
  if("Notification"in window)Notification.requestPermission();
  try{await addDoc(collection(db,"orders"),{uid,name:$("nm").value,phone:$("ph").value,address:$("ad").value,items,subtotal:sub,fee:fe(sub),total:sub+fe(sub),status:"Placed",createdAt:serverTimestamp()});
- cart={};draw();drawCart();show("ord");toast("Order place ho gaya ✅")}catch(e){alert("Order fail: "+e.message)}};
-draw();drawCart();
+ cart={};draw();drawCart();go("o");toast("Order place ho gaya ✅")}catch(e){alert("Order fail: "+e.message)}};
+function acc(){const u=auth.currentUser;if(!u)return;const g=u.providerData.find(p=>p.providerId==="google.com");
+ $("acc").innerHTML=g?`<div class="row"><span>✅ <b>${E(g.displayName||"Customer")}</b><br><small>${E(g.email)}</small></span><button onclick="logout()">Logout</button></div>`:`<div class="row"><span>👤 Guest<br><small>Login karo taaki orders aur details safe rahen</small></span><button class="btn" onclick="login()">Login</button></div>`}
+window.login=async()=>{const p=new GoogleAuthProvider();try{try{await linkWithPopup(auth.currentUser,p)}catch(e){if(/credential-already-in-use|email-already-in-use/.test(e.code))await signInWithPopup(auth,p);else throw e}acc()}catch(e){alert("Login error: "+e.message+"\nFirebase → Authentication me Google ON karo aur Settings → Authorized domains me apni github.io site add karo")}};
+window.logout=()=>signOut(auth);
+window.sp=async()=>{const d={name:$("pn").value,phone:$("pph").value,address:$("pad").value};try{await setDoc(doc(db,"users",uid),d,{merge:true});toast("Profile save ho gayi ✅")}catch(e){alert("Save fail: "+e.message)}};
+function psv(){$("psaved").innerHTML=PR.address||PR.name?`<b>✅ Saved details</b><br>👤 ${E(PR.name)}<br>📞 ${E(PR.phone)}<br>🏠 ${E(PR.address)}`:"<small>Abhi koi details save nahi hain</small>"}
+function bind(u){uid=u.uid;seen={};un.forEach(f=>f());un=[
+ onSnapshot(query(collection(db,"orders"),where("uid","==",uid)),s=>{
+  const l=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||9e9)-(a.createdAt?.seconds||9e9));
+  l.forEach(o=>{if(seen[o.id]&&seen[o.id]!==o.status)toast(`Order ka status: ${o.status}`);seen[o.id]=o.status});
+  $("olist").innerHTML=l.map(o=>`<div class="box"><span class="tag">${E(o.status)}</span> <b>₹${o.total}</b>${o.fee?` <small>(delivery ₹${o.fee})</small>`:" <small>(free delivery)</small>"}<br><small>${o.items.map(i=>E(i.name)+"×"+i.q).join(", ")}</small></div>`).join("")||"Abhi koi order nahi"},()=>{}),
+ onSnapshot(doc(db,"users",uid),s=>{PR=s.data()||{};$("pn").value=PR.name||"";$("pph").value=PR.phone||"";$("pad").value=PR.address||"";
+  if(!$("nm").value)$("nm").value=PR.name||"";if(!$("ph").value)$("ph").value=PR.phone||"";if(!$("ad").value)$("ad").value=PR.address||"";psv()},()=>{})];acc();
+ if(!nb){nb=1;onSnapshot(query(collection(db,"notifications"),orderBy("createdAt","desc"),limit(1)),s=>{
+  s.docChanges().forEach(c=>{const d=c.doc.data();if(c.type==="added"&&d.createdAt&&d.createdAt.toMillis()>t0)toast(d.title+": "+d.body)})},()=>{})}}
+draw();drawCart();psv();
 onSnapshot(collection(db,"products"),s=>{P=s.docs.map(d=>({id:d.id,...d.data()}));draw()},e=>err("Products load nahi hue: "+e.message+" (Firestore Rules check karo)"));
 onSnapshot(doc(db,"settings","store"),s=>{const d=s.data()||{};FEE=d.fee||0;FREE=d.freeAbove||0;drawCart()},()=>{});
-let ly=0;addEventListener("scroll",()=>{const y=scrollY;$("nav").classList.toggle("hide",y>ly&&y>60);ly=y});
-try{uid=(await signInAnonymously(auth)).user.uid}catch(e){err("Login error: "+e.message+" — Firebase me Anonymous sign-in ON karo")}
-if(uid){
-onSnapshot(query(collection(db,"orders"),where("uid","==",uid)),s=>{
- const l=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||9e9)-(a.createdAt?.seconds||9e9));
- l.forEach(o=>{if(seen[o.id]&&seen[o.id]!==o.status)toast(`Order ka status: ${o.status}`);seen[o.id]=o.status});
- $("olist").innerHTML=l.map(o=>`<div class="box"><span class="tag">${o.status}</span> <b>₹${o.total}</b><br><small>${o.items.map(i=>i.name+"×"+i.q).join(", ")}</small></div>`).join("")||"Abhi koi order nahi"},()=>{});
-onSnapshot(query(collection(db,"notifications"),orderBy("createdAt","desc"),limit(1)),s=>{
- s.docChanges().forEach(c=>{const d=c.doc.data();if(c.type==="added"&&d.createdAt&&d.createdAt.toMillis()>t0)toast(d.title+": "+d.body)})},()=>{})}
+onAuthStateChanged(auth,u=>{if(u)bind(u);else signInAnonymously(auth).catch(e=>err("Login error: "+e.message+" — Firebase me Anonymous sign-in ON karo"))});
 </script></body></html>

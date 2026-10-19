@@ -15,13 +15,14 @@ import {db,auth} from "./firebase.js";
 import {signInWithEmailAndPassword,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import {setDoc,collection,onSnapshot,addDoc,updateDoc,deleteDoc,doc,query,orderBy,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {G,SN,DEMO} from "./cats.js";
+const E=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const $=id=>document.getElementById(id),S=["Placed","Packed","Out for Delivery","Delivered","Cancelled"];
 window.li=()=>signInWithEmailAndPassword(auth,$("em").value,$("pw").value).catch(e=>alert(e.message));
 window.lo=()=>signOut(auth);
-onAuthStateChanged(auth,u=>{const ok=u&&!u.isAnonymous;$("login").style.display=ok?"none":"block";$("app").style.display=ok?"block":"none";$("out").style.display=ok?"":"none";if(ok)start()});
+onAuthStateChanged(auth,u=>{const ok=u&&u.providerData.some(p=>p.providerId==="password");$("login").style.display=ok?"none":"block";$("app").style.display=ok?"block":"none";$("out").style.display=ok?"":"none";if(ok)start()});
 document.addEventListener("click",e=>{const t=e.target.dataset.t;if(!t)return;document.querySelectorAll(".chips button").forEach(b=>b.classList.toggle("on",b.dataset.t==t));["o","p","n","s"].forEach(x=>$(x).style.display=x==t?"block":"none")});
 let started=0;function start(){if(started++)return;onSnapshot(doc(db,"settings","store"),s=>{const d=s.data()||{};$("df").value=d.fee??0;$("dfa").value=d.freeAbove??0});
- onSnapshot(query(collection(db,"orders"),orderBy("createdAt","desc")),s=>{$("o").innerHTML=s.docs.map(d=>{const o=d.data();return `<div class="box"><div class="row"><b>${o.name} · ${o.phone}</b><b>₹${o.total}</b></div><small>${o.address}</small><br><small>Delivery: ${o.fee?"₹"+o.fee:"Free"}</small><br>${o.items.map(i=>i.name+" × "+i.q).join(", ")}<br>
+ onSnapshot(query(collection(db,"orders"),orderBy("createdAt","desc")),s=>{$("o").innerHTML=s.docs.map(d=>{const o=d.data();return `<div class="box"><div class="row"><b>${E(o.name)} · ${E(o.phone)}</b><b>₹${o.total}</b></div><small>${E(o.address)}</small><br><small>Delivery: ${o.fee?"₹"+o.fee:"Free"}</small><br>${o.items.map(i=>E(i.name)+" × "+i.q).join(", ")}<br>
  <select onchange="us('${d.id}',this.value)">${S.map(x=>`<option ${x==o.status?"selected":""}>${x}</option>`).join("")}</select></div>`}).join("")||"Koi order nahi"});
  onSnapshot(collection(db,"products"),s=>{$("pl").innerHTML=s.docs.map(d=>{const p=d.data();return `<div class="box row"><span>${p.imgs?.[0]?`<img src="${p.imgs[0]}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;vertical-align:middle"> `:""}${p.name} (${p.unit||""}) ₹${p.price} <small>${p.category||""}</small></span><span><button onclick="st('${d.id}',${p.stock===false})">${p.stock===false?"Out ❌":"In ✅"}</button> <button onclick="dp('${d.id}')">🗑</button></span></div>`}).join("")})}
 $("pc").innerHTML=[...G,...SN].map(c=>`<option>${c[0]}</option>`).join("");

@@ -29,3 +29,5 @@ h2{font-size:1.15rem;margin:18px 0 8px}
 #nav.hide{transform:translateY(110%)}#nav button{border:0;background:none;font-size:1.4rem;display:flex;flex-direction:column;align-items:center;padding:2px 14px}#nav small{font-size:.7rem}
 main{padding-bottom:90px}.ph{position:relative}.ph i{position:absolute;right:6px;bottom:6px;background:#0008;color:#fff;font-size:.7rem;padding:1px 6px;border-radius:8px;font-style:normal}
 .off{position:absolute;left:0;top:0;background:#2563eb;color:#fff;font-size:.7rem;padding:2px 6px;border-radius:10px 0 10px 0}
+#nav button{color:inherit}#nav button.on{color:var(--g);font-weight:700}#nav{padding-bottom:max(10px,env(safe-area-inset-bottom))}
+.view-in{width:100%;margin:4px 0}
