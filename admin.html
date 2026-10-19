@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Lulu Admin</title><link rel="icon" href="logo.jpg"><link rel="stylesheet" href="style.css"></head><body>
 <header><img src="logo.jpg" alt=""><b>Lulu Admin Panel</b><button id="out" onclick="lo()" style="display:none">Logout</button></header>
-<main id="login"><div class="box"><h3>Admin Login</h3><input id="em" placeholder="Email"><input id="pw" type="password" placeholder="Password"><button class="btn" onclick="li()">Login</button></div></main>
+<main id="login"><div class="box"><h3>Admin Login</h3><input id="em" placeholder="Email"><input id="pw" type="password" placeholder="Password"><button class="btn" onclick="li()">Login</button><p style="margin:10px 0 4px">or</p><button class="btn o" onclick="lg()">Sign in with Google</button><p id="le" style="color:#c00"></p></div></main>
 <main id="app" style="display:none">
 <div class="chips"><button class="on" data-t="o">📦 Orders</button><button data-t="p">🧺 Products</button><button data-t="d">📊 Dashboard</button><button data-t="n">🔔 Notification</button><button data-t="s">⚙️ Delivery</button><button data-t="v">👥 Visitors</button><button data-t="u">🧑 Customers</button></div>
 <section id="o"></section>
@@ -15,14 +15,16 @@
 <section id="n" style="display:none"><div class="box"><h4>Message to all customers</h4><input id="nt" placeholder="Title"><input id="nb" placeholder="Message" style="width:100%"><button class="btn o" onclick="sn()">Send</button></div></section></main>
 <script type="module">
 import {db,auth,PUSH_URL} from "./firebase.js";
-import {signInWithEmailAndPassword,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {signInWithEmailAndPassword,GoogleAuthProvider,signInWithPopup,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import {setDoc,collection,onSnapshot,addDoc,updateDoc,deleteDoc,doc,query,orderBy,limit,where,getDocs,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {G,SN,DEMO} from "./cats.js";
+const ADMIN_EMAIL="lulukitstore@gmail.com";
 const E=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const $=id=>document.getElementById(id),S=["Placed","Packed","Out for Delivery","Arrived","Delivered","Cancelled"],LBL={"Placed":"📝 Order placed","Packed":"📦 Packed","Out for Delivery":"🛵 Out for Delivery","Arrived":"📍 Arrived","Delivered":"✅ Delivered","Cancelled":"❌ Cancel"};
+window.lg=()=>signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>alert("Google login error: "+e.message));
 window.li=()=>signInWithEmailAndPassword(auth,$("em").value,$("pw").value).catch(e=>alert(e.message));
 window.lo=()=>signOut(auth);
-onAuthStateChanged(auth,u=>{const ok=u&&u.providerData.some(p=>p.providerId==="password");$("login").style.display=ok?"none":"block";$("app").style.display=ok?"block":"none";$("out").style.display=ok?"":"none";if(ok)start()});
+onAuthStateChanged(auth,u=>{const ok=!!u&&(u.email||"").toLowerCase()===ADMIN_EMAIL;$("le").textContent=u&&!ok?"This account ("+u.email+") is not the admin account.":"";if(u&&!ok)signOut(auth);$("login").style.display=ok?"none":"block";$("app").style.display=ok?"block":"none";$("out").style.display=ok?"":"none";if(ok)start()});
 document.addEventListener("click",e=>{const t=e.target.dataset.t;if(!t)return;document.querySelectorAll(".chips button").forEach(b=>b.classList.toggle("on",b.dataset.t==t));["o","p","n","s","v","u","d"].forEach(x=>$(x).style.display=x==t?"block":"none")});
 let started=0;function start(){if(started++)return;onSnapshot(doc(db,"settings","store"),s=>{const d=s.data()||{};$("df").value=d.fee??0;$("dfa").value=d.freeAbove??0;$("det").value=d.eta??0});
  onSnapshot(query(collection(db,"visitors"),orderBy("last","desc"),limit(500)),s=>{VD=s.docs.map(d=>({id:d.id,...d.data()}));const day=Date.now()-864e5,g=VD.filter(v=>!v.reg);
