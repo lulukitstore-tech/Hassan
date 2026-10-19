@@ -1,48 +1,68 @@
-<!DOCTYPE html><html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Lulu Admin</title><link rel="icon" href="logo.jpg"><link rel="stylesheet" href="style.css"></head><body>
 <header><img src="logo.jpg" alt=""><b>Lulu Admin Panel</b><button id="out" onclick="lo()" style="display:none">Logout</button></header>
 <main id="login"><div class="box"><h3>Admin Login</h3><input id="em" placeholder="Email"><input id="pw" type="password" placeholder="Password"><button class="btn" onclick="li()">Login</button></div></main>
 <main id="app" style="display:none">
-<div class="chips"><button class="on" data-t="o">📦 Orders</button><button data-t="p">🧺 Products</button><button data-t="n">🔔 Notification</button><button data-t="s">⚙️ Delivery</button></div>
+<div class="chips"><button class="on" data-t="o">📦 Orders</button><button data-t="p">🧺 Products</button><button data-t="d">📊 Dashboard</button><button data-t="n">🔔 Notification</button><button data-t="s">⚙️ Delivery</button><button data-t="v">👥 Visitors</button><button data-t="u">🧑 Customers</button></div>
 <section id="o"></section>
-<section id="p" style="display:none"><div class="box"><button class="btn o" onclick="demo()">⚡ Demo products daalo (16)</button></div><div class="box"><h4>Naya Product</h4><input id="pn" placeholder="Naam"><input id="pu" placeholder="Unit (1 kg)"><select id="pc"></select>
-<input id="pm" type="number" placeholder="MRP ₹ (asli price)" oninput="pr()"><input id="pp" type="number" placeholder="Selling price ₹ (customer ko)" oninput="pr()"><div id="pv" style="margin:6px 0"></div>
-<label>📷 Photos (max 4):</label><input id="pf" type="file" accept="image/*" multiple onchange="pf(event)" style="width:100%"><div id="pth" style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0"></div><small>Jis photo pe "Main" select hoga wahi pehle dikhegi</small><br><button class="btn" onclick="ap()">Add Product</button></div><div id="pl"></div></section>
-<section id="s" style="display:none"><div class="box"><h4>Delivery Fee</h4><input id="df" type="number" placeholder="Delivery fee ₹ (0 likho = FREE)"><input id="dfa" type="number" placeholder="Itne ₹ se upar free (0 = nahi)"><button class="btn" onclick="sf()">Save</button></div></section>
-<section id="n" style="display:none"><div class="box"><h4>Sab customers ko message</h4><input id="nt" placeholder="Title"><input id="nb" placeholder="Message" style="width:100%"><button class="btn o" onclick="sn()">Send</button></div></section></main>
+<section id="p" style="display:none"><div class="box"><button class="btn o" onclick="demo()">⚡ Add 16 demo products</button></div><div class="box"><h4>New Product</h4><input id="pn" placeholder="Product name"><input id="pu" placeholder="Unit (1 kg)"><select id="pc"></select>
+<input id="pm" type="number" placeholder="MRP ₹ (original price)" oninput="pr()"><input id="pp" type="number" placeholder="Selling price ₹ (shown to customer)" oninput="pr()"><div id="pv" style="margin:6px 0"></div>
+<label>📷 Photos (max 4):</label><input id="pf" type="file" accept="image/*" multiple onchange="pf(event)" style="width:100%"><div id="pth" style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0"></div><small>The photo marked "Main" is shown first</small><br><button class="btn" onclick="ap()">Add Product</button></div><div id="pl"></div></section>
+<section id="s" style="display:none"><div class="box"><h4>Delivery Fee</h4><input id="df" type="number" placeholder="Delivery fee ₹ (0 = FREE)"><input id="dfa" type="number" placeholder="Free delivery above ₹ (0 = disabled)"><input id="det" type="number" placeholder="Delivery time in minutes (applies to all orders, 0 = hide)"><button class="btn" onclick="sf()">Save</button></div></section>
+<section id="v" style="display:none"><div class="box" id="vs"></div><button class="btn o" onclick="dg()">🗑 Delete guest data (not registered)</button><h4>Recent visitors</h4><div id="vl"></div></section>
+<section id="u" style="display:none"><h4>Registered customers</h4><div id="ul"></div></section>
+<section id="d" style="display:none"><div class="grid" id="dh"></div><h4>🏆 Top products</h4><div id="dt"></div></section>
+<section id="n" style="display:none"><div class="box"><h4>Message to all customers</h4><input id="nt" placeholder="Title"><input id="nb" placeholder="Message" style="width:100%"><button class="btn o" onclick="sn()">Send</button></div></section></main>
 <script type="module">
-import {db,auth} from "./firebase.js";
+import {db,auth,PUSH_URL} from "./firebase.js";
 import {signInWithEmailAndPassword,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import {setDoc,collection,onSnapshot,addDoc,updateDoc,deleteDoc,doc,query,orderBy,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import {setDoc,collection,onSnapshot,addDoc,updateDoc,deleteDoc,doc,query,orderBy,limit,where,getDocs,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {G,SN,DEMO} from "./cats.js";
 const E=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const $=id=>document.getElementById(id),S=["Placed","Packed","Out for Delivery","Delivered","Cancelled"];
+const $=id=>document.getElementById(id),S=["Placed","Packed","Out for Delivery","Arrived","Delivered","Cancelled"],LBL={"Placed":"📝 Order placed","Packed":"📦 Packed","Out for Delivery":"🛵 Out for Delivery","Arrived":"📍 Arrived","Delivered":"✅ Delivered","Cancelled":"❌ Cancel"};
 window.li=()=>signInWithEmailAndPassword(auth,$("em").value,$("pw").value).catch(e=>alert(e.message));
 window.lo=()=>signOut(auth);
 onAuthStateChanged(auth,u=>{const ok=u&&u.providerData.some(p=>p.providerId==="password");$("login").style.display=ok?"none":"block";$("app").style.display=ok?"block":"none";$("out").style.display=ok?"":"none";if(ok)start()});
-document.addEventListener("click",e=>{const t=e.target.dataset.t;if(!t)return;document.querySelectorAll(".chips button").forEach(b=>b.classList.toggle("on",b.dataset.t==t));["o","p","n","s"].forEach(x=>$(x).style.display=x==t?"block":"none")});
-let started=0;function start(){if(started++)return;onSnapshot(doc(db,"settings","store"),s=>{const d=s.data()||{};$("df").value=d.fee??0;$("dfa").value=d.freeAbove??0});
- onSnapshot(query(collection(db,"orders"),orderBy("createdAt","desc")),s=>{$("o").innerHTML=s.docs.map(d=>{const o=d.data();return `<div class="box"><div class="row"><b>${E(o.name)} · ${E(o.phone)}</b><b>₹${o.total}</b></div><small>${E(o.address)}</small><br><small>Delivery: ${o.fee?"₹"+o.fee:"Free"}</small><br>${o.items.map(i=>E(i.name)+" × "+i.q).join(", ")}<br>
- <select onchange="us('${d.id}',this.value)">${S.map(x=>`<option ${x==o.status?"selected":""}>${x}</option>`).join("")}</select></div>`}).join("")||"Koi order nahi"});
+document.addEventListener("click",e=>{const t=e.target.dataset.t;if(!t)return;document.querySelectorAll(".chips button").forEach(b=>b.classList.toggle("on",b.dataset.t==t));["o","p","n","s","v","u","d"].forEach(x=>$(x).style.display=x==t?"block":"none")});
+let started=0;function start(){if(started++)return;onSnapshot(doc(db,"settings","store"),s=>{const d=s.data()||{};$("df").value=d.fee??0;$("dfa").value=d.freeAbove??0;$("det").value=d.eta??0});
+ onSnapshot(query(collection(db,"visitors"),orderBy("last","desc"),limit(500)),s=>{VD=s.docs.map(d=>({id:d.id,...d.data()}));const day=Date.now()-864e5,g=VD.filter(v=>!v.reg);
+  $("vs").innerHTML=`Total visitors: <b>${VD.length}</b> · Guests (not registered): <b>${g.length}</b> · Registered: <b>${VD.length-g.length}</b> · Last 24h: <b>${VD.filter(v=>v.last?.toMillis?.()>day).length}</b>`;
+  $("vl").innerHTML=VD.slice(0,40).map(v=>`<div class="box row"><span>${v.reg?"✅ Registered":"👤 Guest"} · ${v.visits||1} visit<br><small>Last: ${v.last?.toDate?.().toLocaleString("en-IN")||"-"}</small></span><button onclick="dv('${v.id}')">🗑</button></div>`).join("")});
+ onSnapshot(collection(db,"users"),s=>{$("ul").innerHTML=s.docs.map(d=>{const u=d.data();return `<div class="box"><b>${E(u.name||u.gname||"-")}</b> · ${E(u.phone||"")}<br><small>${E(u.email||"")}<br>${E(u.address||"")}</small></div>`}).join("")||"No registered customers yet"});
+ onSnapshot(query(collection(db,"orders"),orderBy("createdAt","desc")),s=>{dash(s.docs.map(d=>d.data()));$("o").innerHTML=s.docs.map(d=>{const o=d.data();return `<div class="box"><div class="row"><b>${E(o.name)} · <a href="tel:${E(o.phone)}">📞 ${E(o.phone)}</a></b><b>₹${o.total}</b></div><small>${E(o.address)}</small>${o.loc?`<br><button onclick="mp('${d.id}',${+o.loc.lat},${+o.loc.lng})">🗺 View map</button> <a href="https://www.google.com/maps?q=${+o.loc.lat},${+o.loc.lng}" target="_blank">Open in Google Maps ↗</a> <small>(±${+o.loc.acc||"?"} m)</small>`:`<br><small>📍 No location shared</small>`}<div id="m_${d.id}"></div><br><small>Delivery: ${o.fee?"₹"+o.fee:"Free"}</small><br>${o.items.map(i=>E(i.name)+" × "+i.q).join(", ")}<br>
+ <div class="sb">${S.map(x=>`<button class="${x==o.status?"btn":""}" onclick="us('${d.id}','${x}','${E(o.uid)}')">${LBL[x]}</button>`).join("")}</div><div class="sb"><input id="e_${d.id}" type="number" placeholder="ETA min" value="${o.eta||""}" style="width:90px"><button onclick="ue('${d.id}')">⏱ Set ETA</button></div></div>`}).join("")||"No orders"});
  onSnapshot(collection(db,"products"),s=>{$("pl").innerHTML=s.docs.map(d=>{const p=d.data();return `<div class="box row"><span>${p.imgs?.[0]?`<img src="${p.imgs[0]}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;vertical-align:middle"> `:""}${p.name} (${p.unit||""}) ₹${p.price} <small>${p.category||""}</small></span><span><button onclick="st('${d.id}',${p.stock===false})">${p.stock===false?"Out ❌":"In ✅"}</button> <button onclick="dp('${d.id}')">🗑</button></span></div>`}).join("")})}
 $("pc").innerHTML=[...G,...SN].map(c=>`<option>${c[0]}</option>`).join("");
-window.demo=async()=>{if(!confirm("16 demo products add karein?"))return;for(const d of DEMO)await addDoc(collection(db,"products"),{name:d[0],unit:d[1],price:d[2],mrp:d[3],category:d[4],img:"",stock:true});alert("Ho gaya ✅")};
-window.us=(id,status)=>updateDoc(doc(db,"orders",id),{status});
+window.demo=async()=>{if(!confirm("Add 16 demo products?"))return;for(const d of DEMO)await addDoc(collection(db,"products"),{name:d[0],unit:d[1],price:d[2],mrp:d[3],category:d[4],img:"",stock:true});alert("Done ✅")};
+
 window.st=(id,v)=>updateDoc(doc(db,"products",id),{stock:v});
 window.dp=id=>confirm("Delete?")&&deleteDoc(doc(db,"products",id));
-window.ap=async()=>{if(!$("pn").value||!$("pp").value)return alert("Naam aur price chahiye");
+window.ap=async()=>{if(!$("pn").value||!$("pp").value)return alert("Name and price are required");
  await addDoc(collection(db,"products"),{name:$("pn").value,unit:$("pu").value,category:$("pc").value,price:+$("pp").value,mrp:+($("pm").value||$("pp").value),img:$("pi").value,stock:true});
  ["pn","pu","pc","pp","pm","pi"].forEach(i=>$(i).value="")};
 let IM=[],MAIN=0;
 const shrink=f=>new Promise(r=>{const i=new Image,u=URL.createObjectURL(f);i.onload=()=>{const s=Math.min(1,500/Math.max(i.width,i.height)),c=document.createElement("canvas");c.width=i.width*s;c.height=i.height*s;c.getContext("2d").drawImage(i,0,0,c.width,c.height);URL.revokeObjectURL(u);r(c.toDataURL("image/jpeg",.7))};i.src=u});
 function draw(){$("pth").innerHTML=IM.map((s,i)=>`<div style="text-align:center"><img src="${s}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:3px solid ${i==MAIN?"#1b8a3a":"transparent"}"><br><small><input type="radio" name="mn" ${i==MAIN?"checked":""} onchange="mm(${i})"> ${i==MAIN?"Main ✅":"Main?"}</small></div>`).join("")}
 window.mm=i=>{MAIN=i;draw()};
-window.pf=async e=>{const fs=[...e.target.files];if(fs.length>4)alert("Sirf pehli 4 photo li jayengi");IM=await Promise.all(fs.slice(0,4).map(shrink));MAIN=0;draw()};
-window.pr=()=>{const m=+$("pm").value,p=+$("pp").value;$("pv").innerHTML=p?`Customer ko dikhega: <b>₹${p}</b>${m>p?` <s>₹${m}</s> · <b style="color:#1b8a3a">${Math.round((m-p)/m*100)}% OFF</b> · bachat ₹${m-p}`:""}`:""};
-window.ap=async()=>{if(!$("pn").value||!$("pp").value)return alert("Naam aur price chahiye");const p=+$("pp").value,m=+($("pm").value||p);if(m<p)return alert("MRP selling price se kam nahi ho sakta");
+window.pf=async e=>{const fs=[...e.target.files];if(fs.length>4)alert("Only the first 4 photos will be used");IM=await Promise.all(fs.slice(0,4).map(shrink));MAIN=0;draw()};
+window.pr=()=>{const m=+$("pm").value,p=+$("pp").value;$("pv").innerHTML=p?`Customer will see: <b>₹${p}</b>${m>p?` <s>₹${m}</s> · <b style="color:#1b8a3a">${Math.round((m-p)/m*100)}% OFF</b> · save ₹${m-p}`:""}`:""};
+window.ap=async()=>{if(!$("pn").value||!$("pp").value)return alert("Name and price are required");const p=+$("pp").value,m=+($("pm").value||p);if(m<p)return alert("MRP cannot be lower than the selling price");
  const imgs=IM.length?[IM[MAIN],...IM.filter((_,i)=>i!=MAIN)]:[];
  try{await addDoc(collection(db,"products"),{name:$("pn").value,unit:$("pu").value,category:$("pc").value,price:p,mrp:m,imgs,stock:true})}catch(e){return alert("Error: "+e.message)}
- ["pn","pu","pp","pm"].forEach(i=>$(i).value="");$("pf").value="";IM=[];draw();pr();alert("Product add ho gaya ✅")};
-window.sf=async()=>{await setDoc(doc(db,"settings","store"),{fee:+$("df").value||0,freeAbove:+$("dfa").value||0});alert("Delivery fee save ✅")};
-window.sn=async()=>{if(!$("nb").value)return;await addDoc(collection(db,"notifications"),{title:$("nt").value||"Lulu Kit Store",body:$("nb").value,createdAt:serverTimestamp()});$("nb").value="";alert("Bhej diya ✅")};
+ ["pn","pu","pp","pm"].forEach(i=>$(i).value="");$("pf").value="";IM=[];draw();pr();alert("Product added ✅")};
+window.sf=async()=>{await setDoc(doc(db,"settings","store"),{fee:+$("df").value||0,freeAbove:+$("dfa").value||0,eta:+$("det").value||0});alert("Delivery settings saved ✅")};
+const MSG={"Packed":"Your order has been packed 📦","Out for Delivery":"Your delivery partner is on the way 🛵","Arrived":"Your order has arrived 📍","Delivered":"Your order has been delivered ✅ Thank you!","Cancelled":"Your order has been cancelled ❌"};
+async function push(tokens,title,body){if(!PUSH_URL||/YOUR/.test(PUSH_URL))return null;try{const idToken=await auth.currentUser.getIdToken();let ok=0;for(let i=0;i<tokens.length;i+=200){const j=await(await fetch(PUSH_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({idToken,tokens:tokens.slice(i,i+200),title,body})})).json();ok+=j.ok||0;for(const b of j.bad||[])deleteDoc(doc(db,"tokens",b))}return ok}catch(e){return null}}
+window.us=async(id,status,uid)=>{await updateDoc(doc(db,"orders",id),{status,["t."+status]:serverTimestamp()});if(MSG[status]&&uid){const t=(await getDocs(query(collection(db,"tokens"),where("uid","==",uid)))).docs.map(d=>d.id);if(t.length)push(t,"Lulu Kit Store",MSG[status])}};
+window.mp=(id,la,ln)=>{const e=$("m_"+id);e.innerHTML=e.innerHTML?"":`<iframe style="width:100%;height:220px;border:0;border-radius:12px;margin-top:8px" src="https://www.openstreetmap.org/export/embed.html?bbox=${ln-.004},${la-.003},${ln+.004},${la+.003}&layer=mapnik&marker=${la},${ln}"></iframe>`};
+window.ue=id=>updateDoc(doc(db,"orders",id),{eta:+$("e_"+id).value||0}).then(()=>alert("ETA saved ✅"));
+function dash(L){const d0=new Date();d0.setHours(0,0,0,0);const T=d0.getTime(),S2=a=>a.reduce((x,o)=>x+(o.total||0),0),dl=L.filter(o=>o.status=="Delivered"),pe=L.filter(o=>!["Delivered","Cancelled"].includes(o.status)),td=o=>o.createdAt?.toMillis?.()>=T;
+ const c=(a,b,cl)=>`<div class="card"><small>${a}</small><b style="font-size:1.4rem;color:${cl||"inherit"}">${b}</b></div>`;
+ $("dh").innerHTML=c("Total orders",L.length)+c("Today's orders",L.filter(td).length)+c("Pending",pe.length,"#f26a0f")+c("Delivered",dl.length,"#1b8a3a")+c("Cancelled",L.filter(o=>o.status=="Cancelled").length,"#c00")+c("💰 Total earnings (delivered)","₹"+S2(dl),"#1b8a3a")+c("Today's earnings","₹"+S2(dl.filter(td)),"#1b8a3a")+c("Pending amount","₹"+S2(pe),"#f26a0f");
+ const m={};L.filter(o=>o.status!="Cancelled").forEach(o=>(o.items||[]).forEach(i=>m[i.name]=(m[i.name]||0)+i.q));
+ $("dt").innerHTML=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([n,q])=>`<div class="box row"><span>${E(n)}</span><b>${q} sold</b></div>`).join("")||"No data yet"}
+let VD=[];window.dv=id=>deleteDoc(doc(db,"visitors",id));
+window.dg=async()=>{const g=VD.filter(v=>!v.reg);if(!g.length)return alert("No guests found");if(!confirm(g.length+" guest records will be deleted. Continue?"))return;for(const v of g)await deleteDoc(doc(db,"visitors",v.id));alert("Deleted ✅")};
+window.sn=async()=>{const b=$("nb").value;if(!b)return;const t=$("nt").value||"Lulu Kit Store";await addDoc(collection(db,"notifications"),{title:t,body:b,createdAt:serverTimestamp()});
+ const tk=(await getDocs(collection(db,"tokens"))).docs.map(d=>d.id);const ok=tk.length?await push(tk,t,b):0;$("nb").value="";alert("Sent ✅ In-app + "+(ok==null?"push failed (check Worker / URL)":ok+" phones notified by push"))};
 </script></body></html>
