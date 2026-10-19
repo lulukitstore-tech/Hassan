@@ -1,5 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Lulu Kit Store</title><link rel="icon" href="icon-192.png"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1b8a3a"><link rel="apple-touch-icon" href="icon-192.png"><link rel="stylesheet" href="style.css"></head><body>
+<div id="ldr"><div class="lc"><i class="rg"></i><i class="rg r2"></i><img src="icon-192.png" alt=""></div><b>Lulu Kit Store</b><small>Fresh groceries, delivered fast</small><div class="lbar"><i></i></div></div>
 <div id="inst"><img src="icon-192.png" alt=""><div class="it"><b>Lulu Kit Store app</b><span id="itx"></span></div><div class="ib2"><button class="btn" id="ib">⬇ Install</button><button id="ix" aria-label="Close">✕</button></div></div>
 <header><img src="icon-192.png" alt=""><b>Lulu Kit Store</b></header><div id="toast"></div>
 <main>
@@ -15,6 +16,7 @@
 <div id="pbox"><div class="box"><h4>My details</h4><input id="pn" placeholder="Full name" class="view-in"><input id="pph" type="tel" placeholder="Mobile number * (required)" class="view-in"><textarea id="pad" placeholder="Home address" class="view-in"></textarea><button class="btn" onclick="sp()">Save</button></div>
 <div class="box"><button class="btn o" onclick="pushOn()">🔔 Turn on order notifications</button> <small id="pst"></small></div><div class="box" id="psaved"></div></div></section>
 </main>
+<div id="pd"></div>
 <nav id="nav"><button data-v="h" class="on">🏠<small>Home</small></button><button data-v="o">📦<small>Orders</small></button><button data-v="c">🛒<small>Cart (<span id="cc">0</span>)</small></button><button data-v="p">👤<small>Profile</small></button></nav>
 <script type="module">
 import {db,auth,app,VAPID} from "./firebase.js";
@@ -25,28 +27,35 @@ import {G,SN} from "./cats.js";
 const $=id=>document.getElementById(id),EM={};[...G,...SN].forEach(c=>EM[c[0]]=c[1]);
 const E=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const IDX={},pics=p=>p.imgs?.length?p.imgs:(p.img?[p.img]:[]);let FEE=0,FREE=0,ETA=0,LOC=null,fgOn=0;const ph10=v=>{v=String(v).replace(/\D/g,"").slice(-10);return /^[6-9]\d{9}$/.test(v)?v:null};const fe=s=>s>0?(FREE>0&&s>=FREE?0:FEE):0;
-let P=[],cart={},cat="",uid=null,seen={},t0=Date.now(),un=[],nb=0,PR={};
-const err=m=>{$("err").style.display="block";$("err").textContent=m};
+let P=[],cart=(()=>{try{return JSON.parse(localStorage.lkc||'{}')}catch(e){return{}}})(),cat="",uid=null,seen={},t0=Date.now(),un=[],nb=0,PR={};
+function hideL(){const e=$("ldr");if(e){e.classList.add("out");setTimeout(()=>e.remove(),500)}}setTimeout(hideL,8000);const err=m=>{$("err").style.display="block";$("err").textContent=m};
 function go(v){["h","c","o","p"].forEach(x=>$("v"+x).style.display=x==v?"block":"none");document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.v==v));scrollTo(0,0)}
 function toast(m){$("toast").textContent=m;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",5000);
- if("Notification"in window&&Notification.permission==="granted")new Notification("Lulu Kit Store",{body:m,icon:"icon-192.png"})}
-const card=p=>`<div class="card">${pics(p).length?`<div class="ph"><img src="${pics(p)[IDX[p.id]||0]}" data-n="${p.id}">${pics(p).length>1?`<i>${(IDX[p.id]||0)+1}/${pics(p).length}</i>`:""}${p.mrp>p.price?`<span class="off">${Math.round((p.mrp-p.price)/p.mrp*100)}% OFF</span>`:""}</div>`:`<div class="emo">${EM[p.category]||"🛒"}</div>`}<b>${E(p.name)}</b><small>${E(p.unit)}</small>
- <div class="r"><span>₹${p.price} ${p.mrp>p.price?`<s>₹${p.mrp}</s>`:""}</span>${p.stock===false?"<small>Out of stock</small>":cart[p.id]?`<span><button data-m="${p.id}">−</button> ${cart[p.id].q} <button data-a="${p.id}">+</button></span>`:`<button class="btn" data-a="${p.id}">ADD</button>`}</div></div>`;
+ if("Notification"in window&&Notification.permission==="granted")try{new Notification("Lulu Kit Store",{body:m,icon:"icon-192.png"})}catch(e){}}
+const oos=p=>p.stock===false||(p.qty!=null&&p.qty<=0);
+const ctl=p=>oos(p)?"<small>Out of stock</small>":cart[p.id]?`<span><button data-m="${p.id}">−</button> ${cart[p.id].q} <button data-a="${p.id}">+</button></span>`:`<button class="btn" data-a="${p.id}">ADD</button>`;
+const card=p=>`<div class="card" data-p="${p.id}" style="cursor:pointer">${pics(p).length?`<div class="ph"><img src="${pics(p)[0]}" loading="lazy" alt="">${pics(p).length>1?`<i>${pics(p).length} 📷</i>`:""}${p.mrp>p.price?`<span class="off">${Math.round((p.mrp-p.price)/p.mrp*100)}% OFF</span>`:""}</div>`:`<div class="emo">${EM[p.category]||"🛒"}</div>`}<b>${E(p.name)}</b><small>${E(p.unit)}</small>
+ <div class="r"><span>₹${p.price} ${p.mrp>p.price?`<s>₹${p.mrp}</s>`:""}</span>${ctl(p)}</div></div>`;
+let PDID=null,PI=0;
+const openP=id=>{PDID=id;PI=0;pdraw();$("pd").classList.add("on");document.body.style.overflow="hidden"};
+const closeP=()=>{PDID=null;$("pd").classList.remove("on");document.body.style.overflow=""};
+function pdraw(){const p=P.find(x=>x.id==PDID);if(!p)return closeP();const im=pics(p),o=p.mrp>p.price?Math.round((p.mrp-p.price)/p.mrp*100):0;
+ $("pd").innerHTML=`<div class="pdh"><button data-x="1">←</button><b>${E(p.name)}</b></div><div class="pdb">${im.length?`<img class="pdm" src="${im[PI]||im[0]}" alt="">`:`<div class="emo" style="height:220px;font-size:5rem">${EM[p.category]||"🛒"}</div>`}${im.length>1?`<div class="pdt">${im.map((x,i)=>`<img src="${x}" data-g="${i}" class="${i==PI?"on":""}" alt="">`).join("")}</div>`:""}<h2 style="margin:10px 0 2px">${E(p.name)}</h2><small>${E(p.unit)} · ${E(p.category||"")}</small><div style="font-size:1.6rem;font-weight:700;margin:8px 0">₹${p.price} ${o?`<s style="font-size:1rem;opacity:.5">₹${p.mrp}</s> <span class="tag" style="background:#2563eb">${o}% OFF</span>`:""}</div>${p.qty!=null&&p.qty>0&&p.qty<=5?`<div style="color:#b45309;font-weight:700">Only ${p.qty} left</div>`:""}<h4>Description</h4><p style="white-space:pre-wrap;margin:0">${E(p.desc||"No description added yet.")}</p></div><div class="pdf">${ctl(p)}</div>`}
 const tile=c=>`<div class="tile" data-c="${c[0]}"><div class="ti">${c[1]}</div>${c[0]}</div>`;
 function draw(){const s=$("q").value.toLowerCase(),home=!cat&&!s;
  $("home").style.display=home?"block":"none";$("list").style.display=home?"none":"block";
  if(home){$("t1").innerHTML=G.map(tile).join("");$("t2").innerHTML=SN.map(tile).join("");
-  const d=P.filter(p=>p.mrp>p.price&&p.stock!==false).slice(0,8);$("deals").innerHTML=d.map(card).join("")||"<small>No deals right now</small>"}
- else{$("ct").textContent=cat||"Search";$("grid").innerHTML=P.filter(p=>(!cat||p.category==cat)&&p.name.toLowerCase().includes(s)).map(card).join("")||"No items in this category yet"}}
-function drawCart(){const l=Object.values(cart),sub=l.reduce((a,b)=>a+b.price*b.q,0),fee=fe(sub),sv=l.reduce((a,b)=>a+Math.max((b.mrp||b.price)-b.price,0)*b.q,0);
+  const d=P.filter(p=>p.mrp>p.price&&!oos(p)).slice(0,8);$("deals").innerHTML=d.map(card).join("")||"<small>No deals right now</small>"}
+ else{$("ct").textContent=cat||"Search";$("grid").innerHTML=P.filter(p=>(!cat||p.category==cat)&&(p.name||"").toLowerCase().includes(s)).map(card).join("")||"No items in this category yet"}}
+function drawCart(){try{localStorage.lkc=JSON.stringify(cart)}catch(e){}const l=Object.values(cart),sub=l.reduce((a,b)=>a+b.price*b.q,0),fee=fe(sub),sv=l.reduce((a,b)=>a+Math.max((b.mrp||b.price)-b.price,0)*b.q,0);
  $("cc").textContent=l.reduce((a,b)=>a+b.q,0);
  $("items").innerHTML=l.map(i=>`<div class="row"><span>${E(i.name)} × ${i.q}</span><b>₹${i.price*i.q}</b></div>`).join("")||"Your cart is empty";
  $("tot").innerHTML=`Subtotal: ₹${sub}<br>Delivery: ${l.length?(fee?"₹"+fee:"FREE 🎉"):"-"}<br><b>Total: ₹${sub+fee}</b>${ETA&&l.length?`<br><small>🕒 Delivery in ~${ETA} min</small>`:""}${sv?`<br><small style="color:var(--g)">You save: ₹${sv}</small>`:""}`}
-document.addEventListener("click",e=>{const od=e.target.closest("[data-o]");if(od){OPEN.has(od.dataset.o)?OPEN.delete(od.dataset.o):OPEN.add(od.dataset.o);ro();return}const v=e.target.closest("[data-v]");if(v){if(v.dataset.v=="h"){cat="";$("q").value=""}go(v.dataset.v)}
+document.addEventListener("click",e=>{const ds0=e.target.dataset;if(ds0.x){closeP();return}if(ds0.g!=null){PI=+ds0.g;pdraw();return}const pc=e.target.closest("[data-p]");if(pc&&!e.target.closest("button")){openP(pc.dataset.p);return}const od=e.target.closest("[data-o]");if(od){OPEN.has(od.dataset.o)?OPEN.delete(od.dataset.o):OPEN.add(od.dataset.o);ro();return}const v=e.target.closest("[data-v]");if(v){if(v.dataset.v=="h"){cat="";$("q").value=""}go(v.dataset.v)}
  const c=e.target.closest("[data-c]");if(c){cat=c.dataset.c;$("q").value="";go("h")}
  const d=e.target.dataset;if(d.n){const p=P.find(x=>x.id==d.n);IDX[d.n]=((IDX[d.n]||0)+1)%pics(p).length}
- if(d.a){if(!uid){location.href="login.html";return}const p=P.find(x=>x.id==d.a);cart[p.id]=cart[p.id]||{...p,q:0};cart[p.id].q++}
- if(d.m){if(--cart[d.m].q<=0)delete cart[d.m]}draw();drawCart()});
+ if(d.a){if(!uid){location.href="login.html";return}const p=P.find(x=>x.id==d.a);const c0=cart[p.id]?cart[p.id].q:0;if(p.qty!=null&&c0>=p.qty){toast("Only "+p.qty+" in stock");return}cart[p.id]=cart[p.id]||{...p,q:0};cart[p.id].q++}
+ if(d.m){if(--cart[d.m].q<=0)delete cart[d.m]}draw();drawCart();if(PDID)pdraw()});
 $("q").oninput=()=>{go("h");draw()};
 window.place=async()=>{const items=Object.values(cart).map(i=>({id:i.id,name:i.name,price:i.price,q:i.q}));const sub=items.reduce((a,b)=>a+b.price*b.q,0);
  if(!uid){location.href="login.html";return}
@@ -102,7 +111,7 @@ function bind(u){uid=u.uid;seen={};setDoc(doc(db,"users",uid),{email:u.email||""
 try{const rid=localStorage.rid||(localStorage.rid=crypto.randomUUID());window.RID=rid;
  if(!sessionStorage.v){sessionStorage.v=1;updateDoc(doc(db,"visitors",rid),{last:serverTimestamp(),visits:increment(1)}).catch(()=>setDoc(doc(db,"visitors",rid),{first:serverTimestamp(),last:serverTimestamp(),visits:1,reg:false}).catch(()=>{}))}}catch(e){}
 draw();drawCart();psv();
-onSnapshot(collection(db,"products"),s=>{P=s.docs.map(d=>({id:d.id,...d.data()}));draw()},e=>err("Could not load products: "+e.message+" (check Firestore Rules)"));
+onSnapshot(collection(db,"products"),s=>{P=s.docs.map(d=>({id:d.id,...d.data()}));Object.keys(cart).forEach(id=>{const f=P.find(x=>x.id==id);if(!f||oos(f))delete cart[id];else Object.assign(cart[id],f,{q:cart[id].q})});draw();drawCart();hideL();if(PDID)pdraw()},e=>{hideL();err("Could not load products: "+e.message+" (check Firestore Rules)")});
 onSnapshot(doc(db,"settings","store"),s=>{const d=s.data()||{};FEE=d.fee||0;FREE=d.freeAbove||0;ETA=d.eta||0;$("eta").style.display=ETA?"block":"none";$("eta").innerHTML=`🕒 Delivery in <b>~${ETA} minutes</b> ⚡`;drawCart()},()=>{});
 onAuthStateChanged(auth,u=>{if(u)bind(u);else{uid=null;un.forEach(f=>f());un=[];OL=[];$("olist").innerHTML='<div class="box">Log in to see your orders<br><br><a class="btn lnk" href="login.html">Login</a></div>';acc()}});
 </script></body></html>
