@@ -1,0 +1,43 @@
+<!DOCTYPE html><html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lulu Kit Store</title><link rel="icon" href="logo.jpg"><link rel="stylesheet" href="style.css"></head><body>
+<header><img src="logo.jpg" alt=""><b>Lulu Kit Store</b><button onclick="show('ord')">📦 Orders</button><button class="btn o" onclick="show('cart')">🛒 <span id="cc">0</span></button></header>
+<div id="toast"></div>
+<main><input id="q" placeholder='Search "doodh", "chips"...' style="width:100%"><div class="chips" id="cats"></div><div class="grid" id="grid"></div></main>
+<div class="drawer" id="cart"><div class="row"><h3>Your Cart</h3><button onclick="show()">✕</button></div><div id="items"></div>
+<h4 id="tot"></h4><input id="nm" placeholder="Naam"><input id="ph" placeholder="Phone" type="tel"><textarea id="ad" placeholder="Poora address"></textarea>
+<button class="btn" style="width:100%" onclick="place()">Order Place Karo (Cash on Delivery)</button></div>
+<div class="drawer" id="ord"><div class="row"><h3>Mere Orders</h3><button onclick="show()">✕</button></div><div id="olist"></div></div>
+<script type="module">
+import {db,auth} from "./firebase.js";
+import {signInAnonymously} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {collection,onSnapshot,addDoc,query,where,orderBy,limit,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+const $=id=>document.getElementById(id);let P=[],cart={},cat="All",uid=null,seen={},t0=Date.now();
+window.show=id=>{["cart","ord"].forEach(x=>$(x).classList.toggle("on",x===id))};
+function toast(m){$("toast").textContent=m;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",5000);
+ if("Notification"in window&&Notification.permission==="granted")new Notification("Lulu Kit Store",{body:m,icon:"logo.jpg"})}
+function draw(){const s=$("q").value.toLowerCase(),cs=["All",...new Set(P.map(p=>p.category).filter(Boolean))];
+ $("cats").innerHTML=cs.map(c=>`<button class="${c==cat?"on":""}" data-c="${c}">${c}</button>`).join("");
+ $("grid").innerHTML=P.filter(p=>(cat=="All"||p.category==cat)&&p.name.toLowerCase().includes(s)).map(p=>`<div class="card"><img src="${p.img||"logo.jpg"}" loading="lazy"><b>${p.name}</b><small>${p.unit||""}</small>
+ <div class="r"><span>₹${p.price} ${p.mrp>p.price?`<s>₹${p.mrp}</s>`:""}</span>${p.stock===false?"<small>Out</small>":cart[p.id]?`<span><button data-m="${p.id}">−</button> ${cart[p.id].q} <button data-a="${p.id}">+</button></span>`:`<button class="btn" data-a="${p.id}">ADD</button>`}</div></div>`).join("")}
+function drawCart(){const l=Object.values(cart);$("cc").textContent=l.reduce((a,b)=>a+b.q,0);
+ $("items").innerHTML=l.map(i=>`<div class="row"><span>${i.name} × ${i.q}</span><b>₹${i.price*i.q}</b></div>`).join("")||"Cart khali hai";
+ $("tot").textContent="Total: ₹"+l.reduce((a,b)=>a+b.price*b.q,0)}
+document.addEventListener("click",e=>{const d=e.target.dataset;if(d.c){cat=d.c}
+ if(d.a){const p=P.find(x=>x.id==d.a);cart[p.id]=cart[p.id]||{...p,q:0};cart[p.id].q++}
+ if(d.m){if(--cart[d.m].q<=0)delete cart[d.m]}draw();drawCart()});
+$("q").oninput=draw;
+window.place=async()=>{const items=Object.values(cart).map(i=>({id:i.id,name:i.name,price:i.price,q:i.q}));
+ if(!items.length||!$("nm").value||!$("ph").value||!$("ad").value)return alert("Cart aur details poori bharo");
+ if("Notification"in window)Notification.requestPermission();
+ await addDoc(collection(db,"orders"),{uid,name:$("nm").value,phone:$("ph").value,address:$("ad").value,items,total:items.reduce((a,b)=>a+b.price*b.q,0),status:"Placed",createdAt:serverTimestamp()});
+ cart={};draw();drawCart();show("ord");toast("Order place ho gaya ✅")};
+await signInAnonymously(auth).then(u=>uid=u.user.uid);
+onSnapshot(collection(db,"products"),s=>{P=s.docs.map(d=>({id:d.id,...d.data()}));draw()});
+onSnapshot(query(collection(db,"orders"),where("uid","==",uid)),s=>{
+ const l=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||9e9)-(a.createdAt?.seconds||9e9));
+ l.forEach(o=>{if(seen[o.id]&&seen[o.id]!==o.status)toast(`Order ka status: ${o.status}`);seen[o.id]=o.status});
+ $("olist").innerHTML=l.map(o=>`<div class="box"><span class="tag">${o.status}</span> <b>₹${o.total}</b><br><small>${o.items.map(i=>i.name+"×"+i.q).join(", ")}</small></div>`).join("")||"Abhi koi order nahi"});
+onSnapshot(query(collection(db,"notifications"),orderBy("createdAt","desc"),limit(1)),s=>{
+ s.docChanges().forEach(c=>{const d=c.doc.data();if(c.type==="added"&&d.createdAt&&d.createdAt.toMillis()>t0)toast(d.title+": "+d.body)})});
+draw();drawCart();
+</script></body></html>

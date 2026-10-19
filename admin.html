@@ -1,0 +1,30 @@
+<!DOCTYPE html><html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lulu Admin</title><link rel="icon" href="logo.jpg"><link rel="stylesheet" href="style.css"></head><body>
+<header><img src="logo.jpg" alt=""><b>Lulu Admin Panel</b><button id="out" onclick="lo()" style="display:none">Logout</button></header>
+<main id="login"><div class="box"><h3>Admin Login</h3><input id="em" placeholder="Email"><input id="pw" type="password" placeholder="Password"><button class="btn" onclick="li()">Login</button></div></main>
+<main id="app" style="display:none">
+<div class="chips"><button class="on" data-t="o">📦 Orders</button><button data-t="p">🧺 Products</button><button data-t="n">🔔 Notification</button></div>
+<section id="o"></section>
+<section id="p" style="display:none"><div class="box"><h4>Naya Product</h4><input id="pn" placeholder="Naam"><input id="pu" placeholder="Unit (1 kg)"><input id="pc" placeholder="Category"><input id="pp" type="number" placeholder="Price ₹"><input id="pm" type="number" placeholder="MRP ₹"><input id="pi" placeholder="Image URL"><button class="btn" onclick="ap()">Add Product</button></div><div id="pl"></div></section>
+<section id="n" style="display:none"><div class="box"><h4>Sab customers ko message</h4><input id="nt" placeholder="Title"><input id="nb" placeholder="Message" style="width:100%"><button class="btn o" onclick="sn()">Send</button></div></section></main>
+<script type="module">
+import {db,auth} from "./firebase.js";
+import {signInWithEmailAndPassword,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {collection,onSnapshot,addDoc,updateDoc,deleteDoc,doc,query,orderBy,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+const $=id=>document.getElementById(id),S=["Placed","Packed","Out for Delivery","Delivered","Cancelled"];
+window.li=()=>signInWithEmailAndPassword(auth,$("em").value,$("pw").value).catch(e=>alert(e.message));
+window.lo=()=>signOut(auth);
+onAuthStateChanged(auth,u=>{const ok=u&&!u.isAnonymous;$("login").style.display=ok?"none":"block";$("app").style.display=ok?"block":"none";$("out").style.display=ok?"":"none";if(ok)start()});
+document.addEventListener("click",e=>{const t=e.target.dataset.t;if(!t)return;document.querySelectorAll(".chips button").forEach(b=>b.classList.toggle("on",b.dataset.t==t));["o","p","n"].forEach(x=>$(x).style.display=x==t?"block":"none")});
+let started=0;function start(){if(started++)return;
+ onSnapshot(query(collection(db,"orders"),orderBy("createdAt","desc")),s=>{$("o").innerHTML=s.docs.map(d=>{const o=d.data();return `<div class="box"><div class="row"><b>${o.name} · ${o.phone}</b><b>₹${o.total}</b></div><small>${o.address}</small><br>${o.items.map(i=>i.name+" × "+i.q).join(", ")}<br>
+ <select onchange="us('${d.id}',this.value)">${S.map(x=>`<option ${x==o.status?"selected":""}>${x}</option>`).join("")}</select></div>`}).join("")||"Koi order nahi"});
+ onSnapshot(collection(db,"products"),s=>{$("pl").innerHTML=s.docs.map(d=>{const p=d.data();return `<div class="box row"><span>${p.name} (${p.unit||""}) ₹${p.price} <small>${p.category||""}</small></span><span><button onclick="st('${d.id}',${p.stock===false})">${p.stock===false?"Out ❌":"In ✅"}</button> <button onclick="dp('${d.id}')">🗑</button></span></div>`}).join("")})}
+window.us=(id,status)=>updateDoc(doc(db,"orders",id),{status});
+window.st=(id,v)=>updateDoc(doc(db,"products",id),{stock:v});
+window.dp=id=>confirm("Delete?")&&deleteDoc(doc(db,"products",id));
+window.ap=async()=>{if(!$("pn").value||!$("pp").value)return alert("Naam aur price chahiye");
+ await addDoc(collection(db,"products"),{name:$("pn").value,unit:$("pu").value,category:$("pc").value||"Others",price:+$("pp").value,mrp:+($("pm").value||$("pp").value),img:$("pi").value,stock:true});
+ ["pn","pu","pc","pp","pm","pi"].forEach(i=>$(i).value="")};
+window.sn=async()=>{if(!$("nb").value)return;await addDoc(collection(db,"notifications"),{title:$("nt").value||"Lulu Kit Store",body:$("nb").value,createdAt:serverTimestamp()});$("nb").value="";alert("Bhej diya ✅")};
+</script></body></html>
