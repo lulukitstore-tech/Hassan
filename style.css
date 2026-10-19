@@ -31,3 +31,16 @@ main{padding-bottom:90px}.ph{position:relative}.ph i{position:absolute;right:6px
 .off{position:absolute;left:0;top:0;background:#2563eb;color:#fff;font-size:.7rem;padding:2px 6px;border-radius:10px 0 10px 0}
 #nav button{color:inherit}#nav button.on{color:var(--g);font-weight:700}#nav{padding-bottom:max(10px,env(safe-area-inset-bottom))}
 .view-in{width:100%;margin:4px 0}
+.stp{display:flex;gap:10px;padding:0 0 14px;position:relative;opacity:.45}.stp.d{opacity:1}
+.dot{width:22px;height:22px;border-radius:50%;border:2px solid #8886;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex:none;position:relative;z-index:1;background:var(--c)}
+.stp.d .dot{background:var(--g);border-color:var(--g);color:#fff}.stp.c .dot{box-shadow:0 0 0 4px #1b8a3a44}
+.stp:not(:last-child)::before{content:"";position:absolute;left:10px;top:22px;bottom:0;width:2px;background:#8884}.stp.d:not(:last-child)::before{background:var(--g)}
+.sb{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.sb button{padding:6px 9px;font-size:.85rem}
+#inst{display:none;align-items:center;gap:12px;margin:10px 12px 0;padding:12px;background:var(--c);color:var(--t);border:1.5px solid var(--g);border-radius:16px;box-shadow:0 4px 16px #0002}
+#inst img{width:48px;height:48px;border-radius:12px;flex:none}#inst .it{flex:1;min-width:0;display:flex;flex-direction:column;font-size:.82rem;line-height:1.3}#inst .it b{color:var(--g);font-size:.95rem}
+#inst .ib2{display:flex;gap:6px;flex:none}#inst button{padding:7px 11px}
+.lnk{display:inline-block;padding:9px 16px;border-radius:10px;text-decoration:none}
+.ord{background:var(--c);border:1px solid #8884;border-radius:16px;padding:12px;margin:12px 0;box-shadow:0 2px 10px #0001}
+.ord .oh{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding-bottom:8px;border-bottom:1px dashed #8886}
+.ord .oi{padding:6px 0}.ord .ot{background:#8881;border-radius:10px;padding:4px 10px;margin:4px 0 8px}
+.ord .otr{width:100%;margin-top:10px;background:none;border:1px solid var(--g);color:var(--g);font-weight:600}

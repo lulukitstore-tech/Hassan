@@ -1,0 +1,123 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Login · Lulu Kit Store</title>
+<link rel="icon" href="icon-192.png"><link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f3d1f"><link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--o:#f26a0f;--g:#1b8a3a;--ink:#1d2a20;color-scheme:light}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:"Baloo 2",system-ui,sans-serif;color:var(--ink);overflow-x:hidden;
+ background:radial-gradient(60% 50% at 80% 12%,#f26a0f55,transparent 70%),radial-gradient(70% 60% at 10% 95%,#3fc46a33,transparent 70%),linear-gradient(160deg,#0b2e17,#14532b 55%,#0f3d1f)}
+.scene{min-height:100%;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:70px 16px 40px}
+.fi{position:absolute;pointer-events:none;will-change:transform;filter:drop-shadow(0 14px 12px #0006)}
+.fi span{display:block;animation:bob 6s ease-in-out infinite}
+.fi.far{filter:blur(2px) drop-shadow(0 10px 10px #0005);opacity:.75}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-22px) rotate(8deg)}}
+.stage{perspective:1100px;width:min(380px,100%);position:relative;z-index:2}
+.float{transform-style:preserve-3d;animation:hover 7s ease-in-out infinite}
+@keyframes hover{0%,100%{transform:translateY(0) rotateZ(-.6deg)}50%{transform:translateY(-16px) rotateZ(.6deg)}}
+.tilt{transform-style:preserve-3d;will-change:transform}
+.card3d{position:relative;transform-style:preserve-3d;padding:64px 22px 22px;border-radius:30px;border:2px solid transparent;
+ background:linear-gradient(#fff,#fff) padding-box,linear-gradient(135deg,var(--o),var(--g)) border-box;
+ box-shadow:0 30px 60px #0007,0 2px 0 #fff inset}
+.card3d::before{content:"";position:absolute;inset:0;border-radius:inherit;background:#082614;transform:translateZ(-22px) translateY(10px);opacity:.7;z-index:-1}
+.logo{position:absolute;left:50%;top:-58px;width:112px;height:112px;margin-left:-56px;border-radius:50%;background:#fff;
+ transform:translateZ(80px);box-shadow:0 18px 26px #0005,0 0 0 5px #fff;animation:logo 5s ease-in-out infinite}
+@keyframes logo{0%,100%{transform:translateZ(80px) translateY(0)}50%{transform:translateZ(95px) translateY(-6px)}}
+.shadow{width:70%;height:26px;margin:34px auto 0;border-radius:50%;background:#000;filter:blur(18px);opacity:.45;animation:sh 7s ease-in-out infinite}
+@keyframes sh{0%,100%{transform:scale(1);opacity:.45}50%{transform:scale(.8);opacity:.28}}
+.in{transform:translateZ(26px)}
+h1{font-size:1.5rem;line-height:1.1;margin:6px 0 2px;text-align:center;color:var(--g);font-weight:800}
+.sub{text-align:center;margin:0 0 12px;font-size:.95rem;opacity:.7}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:#eef4ef;border-radius:14px;padding:4px;margin-bottom:12px}
+.tabs button{border:0;background:none;font:inherit;font-weight:700;padding:8px;border-radius:11px;color:var(--ink);cursor:pointer}
+.tabs button.on{background:#fff;color:var(--o);box-shadow:0 2px 8px #0002}
+label{display:block;margin:0}
+input{width:100%;font:inherit;font-size:16px;padding:11px 13px;margin:5px 0;border-radius:12px;border:1.5px solid #cfd8d1;background:#fbfdfb;color:var(--ink);transition:border-color .15s,box-shadow .15s}
+input:focus{outline:none;border-color:var(--g);box-shadow:0 0 0 4px #1b8a3a2e}
+.pw{position:relative}.pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;font-size:1.1rem;cursor:pointer;padding:6px}
+.go{width:100%;margin-top:8px;padding:12px;border:0;border-radius:14px;font:inherit;font-weight:800;font-size:1.1rem;color:#fff;cursor:pointer;
+ background:linear-gradient(135deg,#f26a0f,#e24f00);box-shadow:0 8px 0 #a83a00,0 14px 18px #0004;transition:transform .1s,box-shadow .1s}
+.go:active{transform:translateY(6px);box-shadow:0 2px 0 #a83a00,0 4px 8px #0004}
+.go[disabled]{opacity:.7}
+.lk{background:none;border:0;font:inherit;color:var(--g);text-decoration:underline;cursor:pointer;padding:6px 0;display:block;margin:4px auto 0}
+#msg{min-height:1.3em;text-align:center;font-size:.92rem;margin:8px 0 0}
+#msg.e{color:#c00}#msg.k{color:var(--g)}
+.hide{display:none}
+a.back{position:absolute;top:14px;left:14px;z-index:3;color:#fff;text-decoration:none;font-weight:700;background:#ffffff22;padding:7px 14px;border-radius:20px;backdrop-filter:blur(6px)}
+a.back:focus-visible,.go:focus-visible,.tabs button:focus-visible,.lk:focus-visible{outline:3px solid #ffd27a;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.fi span,.float,.logo,.shadow{animation:none}}
+@media(max-width:420px){.fi.hm{display:none}}
+</style></head><body>
+<a class="back" href="index.html">← Store</a>
+<div class="scene">
+ <div class="fi far" data-d="0.6" style="left:4%;top:62%;font-size:44px"><span style="animation-delay:-2s">🍞</span></div>
+ <div class="fi" data-d="1.6" style="left:7%;top:16%;font-size:62px"><span>🥕</span></div>
+ <div class="fi" data-d="1.9" style="right:6%;top:12%;font-size:56px"><span style="animation-delay:-3s">🍅</span></div>
+ <div class="fi hm" data-d="1.3" style="right:9%;top:60%;font-size:66px"><span style="animation-delay:-1.5s">🥛</span></div>
+ <div class="fi far" data-d="0.5" style="right:30%;top:6%;font-size:36px"><span style="animation-delay:-4s">🍋</span></div>
+ <div class="fi hm" data-d="1.5" style="left:14%;bottom:8%;font-size:52px"><span style="animation-delay:-2.5s">🧅</span></div>
+ <div class="fi far" data-d="0.7" style="right:18%;bottom:6%;font-size:40px"><span style="animation-delay:-5s">🍎</span></div>
+ <div class="stage"><div class="float"><div class="tilt" id="tilt"><div class="card3d">
+  <img class="logo" src="icon-192.png" alt="Lulu Kit Store">
+  <div class="in">
+   <h1 id="h">Welcome back</h1><p class="sub" id="sb">Log in to order groceries</p>
+   <div class="tabs" role="tablist"><button type="button" id="ti" class="on" role="tab">Login</button><button type="button" id="tu" role="tab">Sign up</button></div>
+   <form id="f" novalidate>
+    <input id="nm" class="hide" autocomplete="name" placeholder="Full name" aria-label="Full name">
+    <input id="mb" class="hide" type="tel" inputmode="numeric" autocomplete="tel" placeholder="Mobile number" aria-label="Mobile number">
+    <input id="em" type="email" autocomplete="email" placeholder="Email" aria-label="Email">
+    <div class="pw"><input id="pw" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password"><button type="button" id="eye" aria-label="Show password">👁</button></div>
+    <button class="go" id="go" type="submit">Login</button>
+    <button class="lk" id="fg" type="button">Forgot password?</button>
+    <div id="msg" role="alert"></div>
+   </form>
+  </div></div></div></div><div class="shadow"></div></div>
+</div>
+<script type="module">
+import {auth,db} from "./firebase.js";
+import {signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,updateProfile,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {doc,setDoc} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+const ADMIN="lulukitstore@gmail.com",$=id=>document.getElementById(id);
+let up=false,busy=false;
+const dest=u=>(u.email||"").toLowerCase()===ADMIN?"admin.html":"index.html";
+const say=(t,k)=>{$("msg").textContent=t||"";$("msg").className=k||""};
+function mode(m){up=m;$("ti").classList.toggle("on",!m);$("tu").classList.toggle("on",m);
+ $("nm").classList.toggle("hide",!m);$("mb").classList.toggle("hide",!m);$("fg").classList.toggle("hide",m);
+ $("h").textContent=m?"Create account":"Welcome back";$("sb").textContent=m?"Sign up in a few seconds":"Log in to order groceries";
+ $("go").textContent=m?"Sign up":"Login";$("pw").autocomplete=m?"new-password":"current-password";say("")}
+$("ti").onclick=()=>mode(false);$("tu").onclick=()=>mode(true);
+$("eye").onclick=()=>{const s=$("pw").type=="password";$("pw").type=s?"text":"password";$("eye").setAttribute("aria-label",s?"Hide password":"Show password")};
+const why=e=>({"auth/invalid-credential":"Email or password is wrong.","auth/wrong-password":"Email or password is wrong.","auth/user-not-found":"No account with this email. Tap Sign up.",
+ "auth/email-already-in-use":"This email is already registered. Tap Login.","auth/weak-password":"Password needs at least 6 characters.","auth/invalid-email":"Enter a valid email address.",
+ "auth/too-many-requests":"Too many tries. Wait a few minutes and try again.","auth/network-request-failed":"No internet connection.",
+ "auth/operation-not-allowed":"Email/Password login is off. Turn it on in Firebase Console → Authentication → Sign-in method.",
+ "auth/unauthorized-domain":"Add this website in Firebase Console → Authentication → Settings → Authorized domains."}[e.code]||("Login failed: "+(e.code||e.message)));
+$("f").onsubmit=async ev=>{ev.preventDefault();const em=$("em").value.trim(),pw=$("pw").value;
+ if(!em||!pw)return say("Enter your email and password.","e");
+ let phone="";if(up){if(!$("nm").value.trim())return say("Enter your name.","e");
+  phone=$("mb").value.replace(/\D/g,"").slice(-10);if(!/^[6-9]\d{9}$/.test(phone))return say("Enter a valid 10-digit mobile number.","e")}
+ busy=true;$("go").disabled=true;say("Please wait…");
+ try{let cr;
+  if(up){cr=await createUserWithEmailAndPassword(auth,em,pw);const n=$("nm").value.trim();
+   await updateProfile(cr.user,{displayName:n}).catch(()=>{});
+   await setDoc(doc(db,"users",cr.user.uid),{name:n,phone,email:em,gname:n},{merge:true}).catch(()=>{})}
+  else cr=await signInWithEmailAndPassword(auth,em,pw);
+  say("Welcome! Opening…","k");location.replace(dest(cr.user))}
+ catch(e){say(why(e),"e");busy=false;$("go").disabled=false}};
+$("fg").onclick=async()=>{const em=$("em").value.trim();if(!em)return say("Type your email above first.","e");
+ try{await sendPasswordResetEmail(auth,em);say("Reset link sent. Check your inbox and spam.","k")}catch(e){say(why(e),"e")}};
+onAuthStateChanged(auth,u=>{if(u&&!busy)location.replace(dest(u))});
+// 3D tilt + parallax
+if(!matchMedia("(prefers-reduced-motion: reduce)").matches){
+ const tl=$("tilt"),fis=[...document.querySelectorAll(".fi")];let tx=0,ty=0,cx=0,cy=0;
+ addEventListener("pointermove",e=>{tx=(e.clientX/innerWidth-.5)*2;ty=(e.clientY/innerHeight-.5)*2});
+ (function loop(){const k=document.activeElement&&document.activeElement.tagName=="INPUT"?.25:1;
+  cx+=(tx*k-cx)*.08;cy+=(ty*k-cy)*.08;
+  tl.style.transform=`rotateX(${(-cy*9).toFixed(2)}deg) rotateY(${(cx*12).toFixed(2)}deg)`;
+  fis.forEach(f=>{const d=+f.dataset.d;f.style.transform=`translate3d(${(-cx*d*18).toFixed(1)}px,${(-cy*d*18).toFixed(1)}px,0)`});
+  requestAnimationFrame(loop)})()}
+</script></body></html>

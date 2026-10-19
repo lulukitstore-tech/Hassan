@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Lulu Kit Store</title><link rel="icon" href="logo.jpg"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1b8a3a"><link rel="apple-touch-icon" href="icon-192.png"><link rel="stylesheet" href="style.css"></head><body>
-<div id="inst"><span id="itx"></span><span><button class="btn" id="ib">Install</button> <button id="ix">✕</button></span></div>
-<header><img src="logo.jpg" alt=""><b>Lulu Kit Store</b></header><div id="toast"></div>
+<title>Lulu Kit Store</title><link rel="icon" href="icon-192.png"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1b8a3a"><link rel="apple-touch-icon" href="icon-192.png"><link rel="stylesheet" href="style.css"></head><body>
+<div id="inst"><img src="icon-192.png" alt=""><div class="it"><b>Lulu Kit Store app</b><span id="itx"></span></div><div class="ib2"><button class="btn" id="ib">⬇ Install</button><button id="ix" aria-label="Close">✕</button></div></div>
+<header><img src="icon-192.png" alt=""><b>Lulu Kit Store</b></header><div id="toast"></div>
 <main>
 <section id="vh"><input id="q" placeholder='Search "milk", "chips"...' class="view-in"><div id="err"></div><div class="box" id="eta" style="display:none"></div>
 <div id="home"><h2>Grocery & Kitchen</h2><div class="tiles" id="t1"></div><h2>Snacks & Drinks</h2><div class="tiles" id="t2"></div><h2>🔥 Hot deals</h2><div class="grid" id="deals"></div></div>
@@ -19,7 +19,7 @@
 <script type="module">
 import {db,auth,app,VAPID} from "./firebase.js";
 import {getMessaging,getToken,onMessage,isSupported} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
-import {onAuthStateChanged,signOut,GoogleAuthProvider,signInWithPopup} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import {doc,setDoc,updateDoc,increment,collection,onSnapshot,addDoc,query,where,orderBy,limit,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {G,SN} from "./cats.js";
 const $=id=>document.getElementById(id),EM={};[...G,...SN].forEach(c=>EM[c[0]]=c[1]);
@@ -29,7 +29,7 @@ let P=[],cart={},cat="",uid=null,seen={},t0=Date.now(),un=[],nb=0,PR={};
 const err=m=>{$("err").style.display="block";$("err").textContent=m};
 function go(v){["h","c","o","p"].forEach(x=>$("v"+x).style.display=x==v?"block":"none");document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.v==v));scrollTo(0,0)}
 function toast(m){$("toast").textContent=m;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",5000);
- if("Notification"in window&&Notification.permission==="granted")new Notification("Lulu Kit Store",{body:m,icon:"logo.jpg"})}
+ if("Notification"in window&&Notification.permission==="granted")new Notification("Lulu Kit Store",{body:m,icon:"icon-192.png"})}
 const card=p=>`<div class="card">${pics(p).length?`<div class="ph"><img src="${pics(p)[IDX[p.id]||0]}" data-n="${p.id}">${pics(p).length>1?`<i>${(IDX[p.id]||0)+1}/${pics(p).length}</i>`:""}${p.mrp>p.price?`<span class="off">${Math.round((p.mrp-p.price)/p.mrp*100)}% OFF</span>`:""}</div>`:`<div class="emo">${EM[p.category]||"🛒"}</div>`}<b>${E(p.name)}</b><small>${E(p.unit)}</small>
  <div class="r"><span>₹${p.price} ${p.mrp>p.price?`<s>₹${p.mrp}</s>`:""}</span>${p.stock===false?"<small>Out of stock</small>":cart[p.id]?`<span><button data-m="${p.id}">−</button> ${cart[p.id].q} <button data-a="${p.id}">+</button></span>`:`<button class="btn" data-a="${p.id}">ADD</button>`}</div></div>`;
 const tile=c=>`<div class="tile" data-c="${c[0]}"><div class="ti">${c[1]}</div>${c[0]}</div>`;
@@ -45,26 +45,26 @@ function drawCart(){const l=Object.values(cart),sub=l.reduce((a,b)=>a+b.price*b.
 document.addEventListener("click",e=>{const od=e.target.closest("[data-o]");if(od){OPEN.has(od.dataset.o)?OPEN.delete(od.dataset.o):OPEN.add(od.dataset.o);ro();return}const v=e.target.closest("[data-v]");if(v){if(v.dataset.v=="h"){cat="";$("q").value=""}go(v.dataset.v)}
  const c=e.target.closest("[data-c]");if(c){cat=c.dataset.c;$("q").value="";go("h")}
  const d=e.target.dataset;if(d.n){const p=P.find(x=>x.id==d.n);IDX[d.n]=((IDX[d.n]||0)+1)%pics(p).length}
- if(d.a){if(!uid){toast("Please log in before adding items 🔐");go("p");return}const p=P.find(x=>x.id==d.a);cart[p.id]=cart[p.id]||{...p,q:0};cart[p.id].q++}
+ if(d.a){if(!uid){location.href="login.html";return}const p=P.find(x=>x.id==d.a);cart[p.id]=cart[p.id]||{...p,q:0};cart[p.id].q++}
  if(d.m){if(--cart[d.m].q<=0)delete cart[d.m]}draw();drawCart()});
 $("q").oninput=()=>{go("h");draw()};
 window.place=async()=>{const items=Object.values(cart).map(i=>({id:i.id,name:i.name,price:i.price,q:i.q}));const sub=items.reduce((a,b)=>a+b.price*b.q,0);
- if(!uid){go("p");return alert("Please log in to place an order")}
+ if(!uid){location.href="login.html";return}
  const phn=ph10($("ph").value);if(!items.length||!$("nm").value||!phn||!$("ad").value)return alert(!phn?"Please enter a valid 10-digit mobile number (required)":"Please fill in your cart, name and address");
  if(!LOC&&!confirm("You have not shared your location. Place the order without it?"))return;
  if("Notification"in window)Notification.requestPermission();
  try{await addDoc(collection(db,"orders"),{uid,name:$("nm").value,phone:phn,address:$("ad").value,loc:LOC,eta:ETA,items,subtotal:sub,fee:fe(sub),total:sub+fe(sub),status:"Placed",createdAt:serverTimestamp()});
  cart={};draw();drawCart();go("o");toast("Order placed ✅")}catch(e){alert("Order failed: "+e.message)}};
 function acc(){const u=auth.currentUser;
- $("acc").innerHTML=u?`<div class="row"><span>✅ <b>${E(u.displayName||"Customer")}</b><br><small>${E(u.email)}</small></span><button onclick="logout()">Logout</button></div>`:`<div class="row"><span>👤 You are not logged in<br><small>Log in / sign up with Google to place orders</small></span><button class="btn" onclick="login()">Login</button></div>`;
+ $("acc").innerHTML=u?`<div class="row"><span>✅ <b>${E(u.displayName||"Customer")}</b><br><small>${E(u.email)}</small></span><button onclick="logout()">Logout</button></div>`:`<div class="row"><span>👤 You are not logged in<br><small>Log in or sign up to place orders</small></span><button class="btn" onclick="login()">Login</button></div>`;
  $("pbox").style.display=u?"block":"none"}
-window.login=async()=>{try{await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){alert("Login error: "+e.message+"\nEnable Google in Firebase → Authentication, and add your github.io site under Settings → Authorized domains")}};
+window.login=()=>{location.href="login.html"};
 window.gl=()=>{if(!navigator.geolocation)return alert("Location is not supported on this device");$("lt").textContent="Finding your location...";
  navigator.geolocation.getCurrentPosition(async p=>{LOC={lat:+p.coords.latitude.toFixed(6),lng:+p.coords.longitude.toFixed(6),acc:Math.round(p.coords.accuracy)};
   $("lt").textContent=`✅ Location found (±${LOC.acc} m)`;
   $("lm").innerHTML=`<iframe loading="lazy" style="width:100%;height:180px;border:0;border-radius:12px;margin-top:8px" src="https://www.openstreetmap.org/export/embed.html?bbox=${LOC.lng-.004},${LOC.lat-.003},${LOC.lng+.004},${LOC.lat+.003}&layer=mapnik&marker=${LOC.lat},${LOC.lng}"></iframe>`;
   if(!$("ad").value.trim()){try{const j=await(await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${LOC.lat}&lon=${LOC.lng}`)).json();if(j.display_name)$("ad").value=j.display_name}catch(e){}}
- },()=>{$("lt").textContent="";alert("Could not get location. Please allow location permission in your browser")},{enableHighAccuracy:true,timeout:15000})};
+  },()=>{$("lt").textContent="";alert("Could not get location. Please allow location permission in your browser")},{enableHighAccuracy:true,timeout:15000})};
 window.pushOn=async q=>{const A=q?()=>{}:alert;try{if(!uid)return A("Please log in first");if(!VAPID||/PASTE/.test(VAPID))return A("Push notifications are not set up yet");
  if(!(await isSupported()))return A("Push is not supported in this browser. On iPhone, add the app to your Home Screen first");
  if(await Notification.requestPermission()!=="granted")return A("Please allow notification permission");
@@ -85,7 +85,11 @@ let OL=[];const OPEN=new Set(),STEPS=[["Placed","Order placed","📝"],["Packed"
 const ts=(o,k)=>{const t=k=="Placed"?o.createdAt:o.t?.[k];return t?.toDate?t.toDate().toLocaleString("en-IN",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}):""};
 const tl=o=>o.status=="Cancelled"?`<span class="tag" style="background:#c00">Cancelled ❌</span>`:STEPS.map(([k,l,ic],i)=>{const c=STEPS.findIndex(x=>x[0]==o.status);return `<div class="stp ${i<=c?"d":""} ${i==c?"c":""}"><span class="dot">${i<=c?"✓":""}</span><div>${ic} <b>${l}</b><br><small>${ts(o,k)}</small></div></div>`}).join("");
 const etaL=o=>{if(!o.eta||["Delivered","Cancelled"].includes(o.status)||!o.createdAt?.toDate)return "";const t=new Date(o.createdAt.toDate().getTime()+o.eta*6e4);return `<div class="tag" style="display:inline-block;margin-top:8px;background:#2563eb">⏱ ~${t.toLocaleTimeString("en-IN",{hour:"numeric",minute:"2-digit"})} delivery by (${o.eta} min)</div>`};
-function ro(){$("olist").innerHTML=OL.map(o=>{const op=OPEN.has(o.id),st=STEPS.find(x=>x[0]==o.status);return `<div class="box"><div class="row" data-o="${o.id}" style="cursor:pointer"><span><span class="tag">${st?st[1]:E(o.status)}</span> <b>₹${o.total}</b></span><small>${op?"▲ hide":"▼ track"}</small></div>${op?`<small>${o.items.map(i=>E(i.name)+" × "+i.q).join(", ")}<br>Delivery: ${o.fee?"₹"+o.fee:"Free"} · 📍 ${E(o.address)}</small>${etaL(o)}<div style="margin-top:12px">${tl(o)}</div>`:""}</div>`}).join("")||"No orders yet"}
+function ro(){$("olist").innerHTML=OL.map(o=>{const op=OPEN.has(o.id),st=STEPS.find(x=>x[0]==o.status),d=o.createdAt?.toDate?o.createdAt.toDate().toLocaleString("en-IN",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}):"";
+ return `<div class="ord"><div class="oh"><div><b>Order #${E(o.id.slice(-6).toUpperCase())}</b><br><small>${d}</small></div><span class="tag"${o.status=="Cancelled"?' style="background:#c00"':""}>${st?st[1]:E(o.status)}</span></div>
+ <div class="oi">${(o.items||[]).map(i=>`<div class="row"><span>${E(i.name)} × ${i.q}</span><span>₹${i.price*i.q}</span></div>`).join("")}</div>
+ <div class="ot"><div class="row"><span>Subtotal</span><span>₹${o.subtotal??o.total}</span></div><div class="row"><span>Delivery</span><span>${o.fee?"₹"+o.fee:"Free"}</span></div><div class="row"><b>Total</b><b>₹${o.total}</b></div></div>
+ <small>📍 ${E(o.address)}</small>${etaL(o)}<button class="otr" data-o="${o.id}">${op?"▲ Hide tracking":"▼ Track order"}</button>${op?`<div style="margin-top:12px">${tl(o)}</div>`:""}</div>`}).join("")||"<div class=\"box\">No orders yet</div>"}
 function bind(u){uid=u.uid;seen={};setDoc(doc(db,"users",uid),{email:u.email||"",gname:u.displayName||""},{merge:true}).catch(()=>{});if(window.RID)updateDoc(doc(db,"visitors",window.RID),{reg:true}).catch(()=>{});if(typeof Notification!="undefined"&&Notification.permission==="granted")window.pushOn(true);un.forEach(f=>f());un=[
  onSnapshot(query(collection(db,"orders"),where("uid","==",uid)),s=>{
   const l=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||9e9)-(a.createdAt?.seconds||9e9));
@@ -100,5 +104,5 @@ try{const rid=localStorage.rid||(localStorage.rid=crypto.randomUUID());window.RI
 draw();drawCart();psv();
 onSnapshot(collection(db,"products"),s=>{P=s.docs.map(d=>({id:d.id,...d.data()}));draw()},e=>err("Could not load products: "+e.message+" (check Firestore Rules)"));
 onSnapshot(doc(db,"settings","store"),s=>{const d=s.data()||{};FEE=d.fee||0;FREE=d.freeAbove||0;ETA=d.eta||0;$("eta").style.display=ETA?"block":"none";$("eta").innerHTML=`🕒 Delivery in <b>~${ETA} minutes</b> ⚡`;drawCart()},()=>{});
-onAuthStateChanged(auth,u=>{if(u)bind(u);else{uid=null;un.forEach(f=>f());un=[];OL=[];$("olist").innerHTML="Log in from Profile to see your orders";acc()}});
+onAuthStateChanged(auth,u=>{if(u)bind(u);else{uid=null;un.forEach(f=>f());un=[];OL=[];$("olist").innerHTML='<div class="box">Log in to see your orders<br><br><a class="btn lnk" href="login.html">Login</a></div>';acc()}});
 </script></body></html>
