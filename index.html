@@ -89,8 +89,8 @@ h2{font-size:1.1rem;font-weight:800;margin:18px 2px 8px}
 .eta{align-self:flex-start;background:#f1f1f1;color:#333;border-radius:6px;font-size:.62rem;font-weight:800;padding:2px 6px}
 @media(prefers-color-scheme:dark){.eta{background:#ffffff1f;color:#eee}}
 .card .r .btn{background:#f7fff9;color:var(--g);border:1px solid var(--g);border-radius:8px;padding:6px 18px;font-weight:800;font-size:.8rem}
-.card .r>span:last-child:not(:first-child),.pdf>span{display:inline-flex;align-items:center;gap:0;background:var(--g);color:#fff;border-radius:8px;overflow:hidden;font-weight:800}
-.card .r>span:last-child:not(:first-child) button,.pdf>span button{background:none;border:0;color:#fff;padding:6px 11px;border-radius:0}
+.card .r>span:last-child:not(:first-child),.pdf .pc>span{display:inline-flex;align-items:center;gap:0;background:var(--g);color:#fff;border-radius:8px;overflow:hidden;font-weight:800}
+.card .r>span:last-child:not(:first-child) button,.pdf .pc>span button{background:none;border:0;color:#fff;padding:6px 11px;border-radius:0}
 .off{background:#3b6fd4;border-radius:0 0 8px 0;font-weight:800}
 .tag{background:var(--g)}
 .box,.ord{border:1px solid var(--b);box-shadow:none;border-radius:12px}
@@ -105,6 +105,7 @@ main{padding-bottom:150px}
 .qc{display:inline-flex;align-items:center;background:var(--g);color:#fff;border-radius:8px;font-weight:800}.qc button{background:none;border:0;color:#fff;padding:6px 11px}
 #bn{background:#fff3c4;color:#5a4500;border:0;font-weight:600;display:none}#cl{background:#fde;color:#a00;font-weight:700;border:0;display:none}
 #pv .row:not(:first-child){border-top:1px dashed var(--b)}
+.pdf{justify-content:space-between;gap:10px}.pdf .pc{flex:1;display:flex}.pdf .pc>*{flex:1;justify-content:center;text-align:center}.pdf>button.o{flex:1;font-weight:800}
 </style></head><body>
 <div id="ldr"><div class="lc"><i class="rg"></i><i class="rg r2"></i><img src="icon-192.png" alt=""></div><b>Lulu Kit Store</b><small>Fresh groceries, delivered fast</small><div class="lbar"><i></i></div></div>
 <div id="off"><div class="em2">📡</div><h2>No internet</h2><p>Check your connection and try again.</p><button class="btn" onclick="location.reload()">Retry</button></div>
@@ -154,9 +155,10 @@ let PDID=null,PI=0;
 const openP=id=>{PDID=id;PI=0;pdraw();$("pd").classList.add("on");document.body.style.overflow="hidden";history.pushState(0,"");ubk()};
 const closeP=()=>{PDID=null;$("pd").classList.remove("on");document.body.style.overflow="";ubk()}
 const ubk=()=>{$("bk").style.display=(PDID||(document.body.dataset.v&&document.body.dataset.v!="h")||cat||$("q").value)?"inline-block":"none"};
-const back=()=>{if(PDID)closeP();else{cat="";$("q").value="";go("h");draw()}ubk()};$("bk").onclick=back;addEventListener("popstate",back);;
+const back=()=>{if(PDID)closeP();else{cat="";$("q").value="";go("h");draw()}ubk()};$("bk").onclick=back;addEventListener("popstate",back);
+function buyNow(id){if(!uid){needLogin(id);return}const p=P.find(x=>x.id==id);if(!p||oos(p))return;if(!cart[id])cart[id]={...p,q:1};closeP();draw();drawCart();go("c")};
 function pdraw(){const p=P.find(x=>x.id==PDID);if(!p)return closeP();const im=pics(p),o=p.mrp>p.price?Math.round((p.mrp-p.price)/p.mrp*100):0;
- $("pd").innerHTML=`<div class="pdh"><button data-x="1">←</button><b>${E(p.name)}</b></div><div class="pdb">${im.length?`<img class="pdm" src="${im[PI]||im[0]}" alt="">`:`<div class="emo" style="height:220px;font-size:5rem">${EM[p.category]||"🛒"}</div>`}${im.length>1?`<div class="pdt">${im.map((x,i)=>`<img src="${x}" data-g="${i}" class="${i==PI?"on":""}" alt="">`).join("")}</div>`:""}<h2 style="margin:10px 0 2px">${E(p.name)}</h2><small>${E(p.unit)} · ${E(p.category||"")}</small><div style="font-size:1.6rem;font-weight:700;margin:8px 0">₹${p.price} ${o?`<s style="font-size:1rem;opacity:.5">₹${p.mrp}</s> <span class="tag" style="background:#2563eb">${o}% OFF</span>`:""}</div>${p.qty!=null&&p.qty>0&&p.qty<=5?`<div style="color:#b45309;font-weight:700">Only ${p.qty} left</div>`:""}<h4>Description</h4><p style="white-space:pre-wrap;margin:0">${E(p.desc||"No description added yet.")}</p></div><div class="pdf">${ctl(p)}</div>`}
+ $("pd").innerHTML=`<div class="pdh"><button data-x="1">←</button><b>${E(p.name)}</b></div><div class="pdb">${im.length?`<img class="pdm" src="${im[PI]||im[0]}" alt="">`:`<div class="emo" style="height:220px;font-size:5rem">${EM[p.category]||"🛒"}</div>`}${im.length>1?`<div class="pdt">${im.map((x,i)=>`<img src="${x}" data-g="${i}" class="${i==PI?"on":""}" alt="">`).join("")}</div>`:""}<h2 style="margin:10px 0 2px">${E(p.name)}</h2><small>${E(p.unit)} · ${E(p.category||"")}</small><div style="font-size:1.6rem;font-weight:700;margin:8px 0">₹${p.price} ${o?`<s style="font-size:1rem;opacity:.5">₹${p.mrp}</s> <span class="tag" style="background:#2563eb">${o}% OFF</span>`:""}</div>${p.qty!=null&&p.qty>0&&p.qty<=5?`<div style="color:#b45309;font-weight:700">Only ${p.qty} left</div>`:""}<h4>Description</h4><p style="white-space:pre-wrap;margin:0">${E(p.desc||"No description added yet.")}</p></div><div class="pdf"><div class="pc">${ctl(p)}</div>${oos(p)?"":`<button class="btn o" data-bn="${p.id}">⚡ Order Now</button>`}</div>`}
 const tile=c=>`<div class="tile" data-c="${c[0]}"><div class="ti">${c[1]}</div>${c[0]}</div>`;
 function draw(){const s=$("q").value.toLowerCase(),home=!cat&&!s;
  $("home").style.display=home?"block":"none";$("list").style.display=home?"none":"block";
@@ -167,7 +169,7 @@ function drawCart(){try{localStorage.lkc=JSON.stringify(cart)}catch(e){}const l=
  $("cc").textContent=l.reduce((a,b)=>a+b.q,0);{const n=l.reduce((a,b)=>a+b.q,0),cb=$("cbar");cb.style.display=n?"flex":"none";cb.innerHTML=`<span><b>${n} item${n>1?"s":""}</b><small>₹${sub} + delivery</small></span><b>View cart ›</b>`}
  $("items").innerHTML=l.map(i=>`<div class="row"><span style="flex:1">${E(i.name)}<br><small>₹${i.price} each</small></span><span class="qc"><button data-m="${i.id}">−</button> ${i.q} <button data-a="${i.id}">+</button></span><b style="min-width:56px;text-align:right">₹${i.price*i.q}</b></div>`).join("")||"Your cart is empty";
  $("tot").innerHTML=`Subtotal: ₹${sub}<br>Delivery: ${l.length?(fee?"₹"+fee:"FREE 🎉"):"-"}<br><b>Total: ₹${sub+fee}</b>${ETA&&l.length?`<br><small>🕒 Delivery in ~${ETA} min</small>`:""}${sv?`<br><small style="color:var(--g)">You save: ₹${sv}</small>`:""}`}
-document.addEventListener("click",e=>{const ds0=e.target.dataset;if(ds0.x){closeP();return}if(ds0.g!=null){PI=+ds0.g;pdraw();return}const pc=e.target.closest("[data-p]");if(pc&&!e.target.closest("button")){openP(pc.dataset.p);return}const od=e.target.closest("[data-o]");if(od){OPEN.has(od.dataset.o)?OPEN.delete(od.dataset.o):OPEN.add(od.dataset.o);ro();return}const v=e.target.closest("[data-v]");if(v){if(v.dataset.v=="h"){cat="";$("q").value=""}go(v.dataset.v)}
+document.addEventListener("click",e=>{const ds0=e.target.dataset;if(ds0.bn){buyNow(ds0.bn);return}if(ds0.x){closeP();return}if(ds0.g!=null){PI=+ds0.g;pdraw();return}const pc=e.target.closest("[data-p]");if(pc&&!e.target.closest("button")){openP(pc.dataset.p);return}const od=e.target.closest("[data-o]");if(od){OPEN.has(od.dataset.o)?OPEN.delete(od.dataset.o):OPEN.add(od.dataset.o);ro();return}const v=e.target.closest("[data-v]");if(v){if(v.dataset.v=="h"){cat="";$("q").value=""}go(v.dataset.v)}
  const c=e.target.closest("[data-c]");if(c){cat=c.dataset.c;$("q").value="";go("h")}
  const d=e.target.dataset;if(d.n){const p=P.find(x=>x.id==d.n);IDX[d.n]=((IDX[d.n]||0)+1)%pics(p).length}
  if(d.a){if(!uid){needLogin(d.a);return}const p=P.find(x=>x.id==d.a);const c0=cart[p.id]?cart[p.id].q:0;if(p.qty!=null&&c0>=p.qty){toast("Only "+p.qty+" in stock");return}cart[p.id]=cart[p.id]||{...p,q:0};cart[p.id].q++}
