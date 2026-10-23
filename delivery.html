@@ -21,7 +21,7 @@ import {signInWithEmailAndPassword,onAuthStateChanged,signOut} from "https://www
 import {collection,doc,getDoc,runTransaction,updateDoc,onSnapshot,query,orderBy,limit,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 const $=id=>document.getElementById(id),E=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const F=["Placed","Packed","Out for Delivery","Arrived","Delivered"],LBL={Placed:"📝 Order placed",Packed:"📦 Packed","Out for Delivery":"🛵 Out for Delivery",Arrived:"📍 Arrived",Delivered:"✅ Delivered"};
-let me=null,O=[],tab="n",first=0,un=null;
+let PM={},me=null,O=[],tab="n",first=0,un=null;
 const act=o=>!["Delivered","Cancelled"].includes(o.status),tm=t=>t?.toDate?t.toDate().toLocaleString("en-IN",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}):"";
 const toast=m=>{$("toast").textContent=m;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",3500)};
 $("li").onclick=async()=>{$("le").textContent="";try{await signInWithEmailAndPassword(auth,$("em").value.trim(),$("pw").value)}catch(e){$("le").textContent="Login failed. Check email and password."}};
@@ -30,9 +30,9 @@ onAuthStateChanged(auth,async u=>{if(un){un();un=null}me=null;first=0;$("lg").st
  try{const s=await getDoc(doc(db,"staff",u.uid));if(!s.exists()||s.data().active===false){$("lg").style.display="grid";$("le").textContent="This account is not an active delivery account.";await signOut(auth);return}
  me={uid:u.uid,...s.data()}}catch(e){$("lg").style.display="grid";$("le").textContent="Cannot check account: "+e.code;await signOut(auth);return}
  $("who").textContent=me.name;$("app").style.display="block";
- un=onSnapshot(query(collection(db,"orders"),orderBy("createdAt","desc"),limit(60)),s=>{O=s.docs.map(d=>({id:d.id,...d.data()}));if(first&&s.docChanges().some(c=>c.type=="added"&&!c.doc.data().driver)){toast("🆕 New order!");navigator.vibrate?.([200,100,200])}first=1;r()},e=>toast("No access to orders ("+e.code+")"))});
+ const ua=onSnapshot(query(collection(db,"orders"),orderBy("createdAt","desc"),limit(60)),s=>{O=s.docs.map(d=>({id:d.id,...d.data()}));if(first&&s.docChanges().some(c=>c.type=="added"&&!c.doc.data().driver)){toast("🆕 New order!");navigator.vibrate?.([200,100,200])}first=1;r()},e=>toast("No access to orders ("+e.code+")"));const ub=onSnapshot(collection(db,"products"),s=>{PM={};s.docs.forEach(d=>PM[d.id]=d.data());if(me)r()});un=()=>{ua();ub()}});
 $("nv").onclick=e=>{const t=e.target.dataset.t;if(!t)return;tab=t;document.querySelectorAll("#nv button").forEach(b=>b.classList.toggle("on",b.dataset.t==t));r()};
-const items=o=>(o.items||[]).map(x=>`${E(x.name)} × ${x.q}`).join(", ");
+const items=o=>(o.items||[]).map(x=>{const p=PM[x.id],m=p?(p.imgs?.[0]||p.img):"";return `<div style="display:flex;align-items:center;gap:10px;padding:4px 0">${m?`<img src="${E(m)}" alt="" style="width:46px;height:46px;object-fit:contain;border-radius:8px;background:#fff;border:1px solid var(--b)">`:"🛒"}<span>${E(x.name)} <b>× ${x.q}</b></span></div>`}).join("");
 const nc=o=>`<div class="box"><div class="r"><b>#${E(o.id.slice(-6).toUpperCase())}</b><small>${tm(o.createdAt)}</small></div><div class="m" style="margin:6px 0">${items(o)}</div><div class="r"><b>₹${o.total}</b><span class="tag">${E(o.status)}</span></div><button class="p" onclick="ac('${o.id}')">✅ Accept this order</button></div>`;
 const mc=o=>{const ph=E(o.phone||""),nx=F[F.indexOf(o.status)+1];return `<div class="box"><div class="r"><b>#${E(o.id.slice(-6).toUpperCase())}</b><span class="tag">${LBL[o.status]||E(o.status)}</span></div><small>${tm(o.createdAt)}</small>
 <div style="margin:8px 0;line-height:1.6">👤 <b>${E(o.name)}</b><br>📞 <a href="tel:${ph}">${ph}</a> · <a target="_blank" href="https://wa.me/91${ph}">WhatsApp</a><br>🏠 ${E(o.address)}<br>${o.loc?`<a target="_blank" href="https://maps.google.com/?q=${o.loc.lat},${o.loc.lng}">📍 Open in Maps</a>`:"<small>No location shared</small>"}</div>
