@@ -1,0 +1,45 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lulu Kit Delivery</title><style>
+:root{--y:#f8cb46;--g:#0c831f;--bg:#f4f5f7;--c:#fff;--t:#1d2a20;--b:#0000001a;--m:#6b7280}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1115;--c:#1a1d24;--t:#eef3ee;--b:#ffffff1f;--m:#9aa0a6}}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--t)}
+header{position:sticky;top:0;z-index:5;background:var(--y);color:#1c1c1c;padding:10px 14px;display:flex;align-items:center;gap:8px}header b{flex:1}header button{background:#0000000f;border:0;border-radius:10px;padding:7px 12px;font-weight:700;color:#1c1c1c}
+input,button{font:inherit;padding:11px;border-radius:10px;border:1px solid var(--b);background:var(--c);color:var(--t)}button{cursor:pointer}.p{background:var(--g)!important;color:#fff!important;border:0;font-weight:700;width:100%;margin-top:8px;padding:13px}
+nav{display:flex;gap:6px;padding:10px 12px;position:sticky;top:50px;background:var(--bg);z-index:4}nav button{flex:1;border-radius:99px}nav .on{background:var(--g);color:#fff;border:0}
+main{max-width:640px;margin:auto;padding:0 12px 40px}.box{background:var(--c);border:1px solid var(--b);border-radius:14px;padding:12px;margin:10px 0}
+.r{display:flex;justify-content:space-between;align-items:center;gap:8px}.m,small{color:var(--m)}.tag{background:var(--g);color:#fff;border-radius:8px;padding:2px 8px;font-size:.8rem}
+#lg{max-width:340px;margin:15vh auto;padding:0 16px;display:grid;gap:10px;text-align:center}#app{display:none}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1c1c1c;color:#fff;padding:10px 16px;border-radius:12px;display:none;z-index:20}
+a{color:inherit}
+</style></head><body>
+<div id="lg"><h2>🛵 Lulu Kit Delivery</h2><input id="em" type="email" placeholder="Email"><input id="pw" type="password" placeholder="Password"><button class="p" id="li">Login</button><small id="le" style="color:#c62828"></small></div>
+<div id="app"><header><b>🛵 <span id="who"></span></b><button id="lo">Logout</button></header>
+<nav id="nv"><button data-t="n" class="on">🆕 New (<span id="cn">0</span>)</button><button data-t="m">🛵 Mine (<span id="cm">0</span>)</button><button data-t="d">✅ Done</button></nav>
+<main id="list"></main></div><div id="toast"></div>
+<script type="module">
+import {db,auth} from "./firebase.js";
+import {signInWithEmailAndPassword,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {collection,doc,getDoc,runTransaction,updateDoc,onSnapshot,query,orderBy,limit,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+const $=id=>document.getElementById(id),E=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const F=["Placed","Packed","Out for Delivery","Arrived","Delivered"],LBL={Placed:"📝 Order placed",Packed:"📦 Packed","Out for Delivery":"🛵 Out for Delivery",Arrived:"📍 Arrived",Delivered:"✅ Delivered"};
+let me=null,O=[],tab="n",first=0,un=null;
+const act=o=>!["Delivered","Cancelled"].includes(o.status),tm=t=>t?.toDate?t.toDate().toLocaleString("en-IN",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}):"";
+const toast=m=>{$("toast").textContent=m;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",3500)};
+$("li").onclick=async()=>{$("le").textContent="";try{await signInWithEmailAndPassword(auth,$("em").value.trim(),$("pw").value)}catch(e){$("le").textContent="Login failed. Check email and password."}};
+$("lo").onclick=()=>signOut(auth);
+onAuthStateChanged(auth,async u=>{if(un){un();un=null}me=null;first=0;$("lg").style.display=u?"none":"grid";$("app").style.display="none";if(!u)return;
+ try{const s=await getDoc(doc(db,"staff",u.uid));if(!s.exists()||s.data().active===false){$("lg").style.display="grid";$("le").textContent="This account is not an active delivery account.";await signOut(auth);return}
+ me={uid:u.uid,...s.data()}}catch(e){$("lg").style.display="grid";$("le").textContent="Cannot check account: "+e.code;await signOut(auth);return}
+ $("who").textContent=me.name;$("app").style.display="block";
+ un=onSnapshot(query(collection(db,"orders"),orderBy("createdAt","desc"),limit(60)),s=>{O=s.docs.map(d=>({id:d.id,...d.data()}));if(first&&s.docChanges().some(c=>c.type=="added"&&!c.doc.data().driver)){toast("🆕 New order!");navigator.vibrate?.([200,100,200])}first=1;r()},e=>toast("No access to orders ("+e.code+")"))});
+$("nv").onclick=e=>{const t=e.target.dataset.t;if(!t)return;tab=t;document.querySelectorAll("#nv button").forEach(b=>b.classList.toggle("on",b.dataset.t==t));r()};
+const items=o=>(o.items||[]).map(x=>`${E(x.name)} × ${x.q}`).join(", ");
+const nc=o=>`<div class="box"><div class="r"><b>#${E(o.id.slice(-6).toUpperCase())}</b><small>${tm(o.createdAt)}</small></div><div class="m" style="margin:6px 0">${items(o)}</div><div class="r"><b>₹${o.total}</b><span class="tag">${E(o.status)}</span></div><button class="p" onclick="ac('${o.id}')">✅ Accept this order</button></div>`;
+const mc=o=>{const ph=E(o.phone||""),nx=F[F.indexOf(o.status)+1];return `<div class="box"><div class="r"><b>#${E(o.id.slice(-6).toUpperCase())}</b><span class="tag">${LBL[o.status]||E(o.status)}</span></div><small>${tm(o.createdAt)}</small>
+<div style="margin:8px 0;line-height:1.6">👤 <b>${E(o.name)}</b><br>📞 <a href="tel:${ph}">${ph}</a> · <a target="_blank" href="https://wa.me/91${ph}">WhatsApp</a><br>🏠 ${E(o.address)}<br>${o.loc?`<a target="_blank" href="https://maps.google.com/?q=${o.loc.lat},${o.loc.lng}">📍 Open in Maps</a>`:"<small>No location shared</small>"}</div>
+<div class="m">${items(o)}</div><div class="r" style="margin-top:6px"><b>Total ₹${o.total}</b></div>
+${act(o)?(o.status=="Placed"?`<small>⏳ Waiting for the store to pack this order</small>`:nx?`<button class="p" onclick="st('${o.id}','${nx}')">Mark: ${LBL[nx]} ➜</button>`:""):""}</div>`};
+function r(){const nw=O.filter(o=>act(o)&&!o.driver),mine=O.filter(o=>o.driver==me.uid&&act(o)),done=O.filter(o=>o.driver==me.uid&&o.status=="Delivered");$("cn").textContent=nw.length;$("cm").textContent=mine.length;
+ $("list").innerHTML=(tab=="n"?nw.map(nc):tab=="m"?mine.map(mc):done.map(mc)).join("")||"<p class='m'>Nothing here</p>"}
+window.ac=async id=>{try{await runTransaction(db,async tx=>{const ref=doc(db,"orders",id),s=await tx.get(ref);if(!s.exists())throw new Error("gone");const o=s.data();if(o.driver)throw new Error("taken");if(!act(o))throw new Error("closed");tx.update(ref,{driver:me.uid,driverName:me.name,driverPhone:me.phone,acceptedAt:serverTimestamp()})});toast("✅ This order is yours");tab="m";document.querySelectorAll("#nv button").forEach(b=>b.classList.toggle("on",b.dataset.t=="m"));r()}catch(e){alert(e.message=="taken"?"Sorry, another delivery boy accepted it first.":e.message=="closed"||e.message=="gone"?"This order is no longer available.":"Failed: "+e.message)}};
+window.st=async(id,s)=>{if(s=="Delivered"&&!confirm("Mark as delivered?"))return;try{await updateDoc(doc(db,"orders",id),{status:s,["t."+s]:serverTimestamp()});toast(LBL[s])}catch(e){alert("Failed: "+e.message)}};
+</script></body></html>
