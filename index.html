@@ -134,7 +134,7 @@ main{padding-bottom:150px}
 import {db,auth,app,VAPID} from "./firebase.js";
 import {getMessaging,getToken,onMessage,isSupported} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 import {onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import {doc,setDoc,updateDoc,increment,collection,onSnapshot,addDoc,query,where,orderBy,limit,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import {doc,getDoc,setDoc,updateDoc,increment,collection,onSnapshot,addDoc,query,where,orderBy,limit,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {G,SN} from "./cats.js";
 const $=id=>document.getElementById(id),EM={};[...G,...SN].forEach(c=>EM[c[0]]=c[1]);
 const E=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -229,8 +229,8 @@ function ro(){$("olist").innerHTML=OL.map(o=>{const op=OPEN.has(o.id),st=STEPS.f
  return `<div class="ord"><div class="oh"><div><b>Order #${E(o.id.slice(-6).toUpperCase())}</b><br><small>${d}</small></div><span class="tag"${o.status=="Cancelled"?' style="background:#c00"':""}>${st?st[1]:E(o.status)}</span></div>
  <div class="oi">${(o.items||[]).map(i=>`<div class="row"><span>${E(i.name)} × ${i.q}</span><span>₹${i.price*i.q}</span></div>`).join("")}</div>
  <div class="ot"><div class="row"><span>Subtotal</span><span>₹${o.subtotal??o.total}</span></div><div class="row"><span>Delivery</span><span>${o.fee?"₹"+o.fee:"Free"}</span></div><div class="row"><b>Total</b><b>₹${o.total}</b></div></div>
- <small>📍 ${E(o.address)}</small>${etaL(o)}<button class="otr" data-o="${o.id}">${op?"▲ Hide tracking":"▼ Track order"}</button>${op?`<div style="margin-top:12px">${tl(o)}</div>`:""}</div>`}).join("")||"<div class=\"box\">No orders yet</div>"}
-function bind(u){uid=u.uid;seen={};setDoc(doc(db,"users",uid),{email:u.email||"",gname:u.displayName||"",last:serverTimestamp()},{merge:true}).catch(()=>{});if(window.RID)updateDoc(doc(db,"visitors",window.RID),{reg:true}).catch(()=>{});if(typeof Notification!="undefined"&&Notification.permission==="granted")window.pushOn(true);un.forEach(f=>f());un=[
+ <small>📍 ${E(o.address)}</small>${etaL(o)}${o.driverName?`<div class="box" style="margin:8px 0">🛵 ${o.status=="Delivered"?"Delivered by":"Delivery by"} <b>${E(o.driverName)}</b>${o.status!="Delivered"&&o.driverPhone?` · <a href="tel:${E(o.driverPhone)}">📞 Call</a>`:""}</div>`:""}<button class="otr" data-o="${o.id}">${op?"▲ Hide tracking":"▼ Track order"}</button>${op?`<div style="margin-top:12px">${tl(o)}</div>`:""}</div>`}).join("")||"<div class=\"box\">No orders yet</div>"}
+function bind(u){uid=u.uid;seen={};const uset=()=>setDoc(doc(db,"users",uid),{email:u.email||"",gname:u.displayName||"",last:serverTimestamp()},{merge:true}).catch(()=>{});getDoc(doc(db,"staff",u.uid)).then(s=>{if(s.exists()&&s.data().active!==false)location.replace("delivery.html");else uset()}).catch(uset);if(window.RID)updateDoc(doc(db,"visitors",window.RID),{reg:true}).catch(()=>{});if(typeof Notification!="undefined"&&Notification.permission==="granted")window.pushOn(true);un.forEach(f=>f());un=[
  onSnapshot(query(collection(db,"orders"),where("uid","==",uid)),s=>{
   const l=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||9e9)-(a.createdAt?.seconds||9e9));
   l.forEach(o=>{if(seen[o.id]&&seen[o.id]!==o.status)toast(`Order status: ${o.status}`);seen[o.id]=o.status});
