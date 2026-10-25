@@ -116,7 +116,7 @@ main{padding-bottom:150px}
 <header><button id="bk" aria-label="Back">←</button><img src="icon-192.png" alt=""><b id="hn">Lulu Kit Store</b><button id="bl" aria-label="Notifications">🔔<i id="bc"></i></button></header><div id="np"><div id="nl"></div><small>ℹ️ A notification disappears once you open it. Only the latest 5 are kept.</small></div><div id="toast"></div><div id="lb"></div>
 <main>
 <section id="vh"><input id="q" placeholder='Search "milk", "chips"...' class="view-in"><div id="err"></div><div class="box" id="eta" style="display:none"></div><div class="box" id="bn"></div><div class="box" id="cl"></div>
-<div id="home"><h2>Grocery & Kitchen</h2><div class="tiles" id="t1"></div><h2>Snacks & Drinks</h2><div class="tiles" id="t2"></div><h2>🔥 Hot deals</h2><div class="grid" id="deals"></div></div>
+<div id="home"><h2 id="h1">Grocery & Kitchen</h2><div class="tiles" id="t1"></div><h2 id="h2">Snacks & Drinks</h2><div class="tiles" id="t2"></div><h2>🔥 Hot deals</h2><div class="grid" id="deals"></div></div>
 <div id="list" style="display:none"><div class="row"><button data-c="">← Back</button><h2 id="ct" style="margin:0"></h2><span></span></div><div class="grid" id="grid"></div></div></section>
 <section id="vc" style="display:none"><h2>🛒 Your Cart</h2><div id="items"></div><h4 id="tot"></h4>
 <input id="nm" placeholder="Full name" class="view-in"><input id="ph" placeholder="Mobile number * (required)" type="tel" class="view-in"><textarea id="ad" placeholder="Full delivery address" class="view-in"></textarea>
@@ -175,7 +175,7 @@ function pdraw(){const p=P.find(x=>x.id==PDID);if(!p)return closeP();const im=pi
 const tile=c=>`<div class="tile" data-c="${c[0]}"><div class="ti">${c[1]}</div>${c[0]}</div>`;
 function draw(){const s=$("q").value.toLowerCase(),home=!cat&&!s;
  $("home").style.display=home?"block":"none";$("list").style.display=home?"none":"block";
- if(home){$("t1").innerHTML=G.map(tile).join("");$("t2").innerHTML=SN.map(tile).join("");
+ if(home){{const hs=c=>P.some(p=>p.category==c[0]),g1=G.filter(hs),g2=SN.filter(hs);$("t1").innerHTML=g1.map(tile).join("");$("t2").innerHTML=g2.map(tile).join("");$("h1").style.display=g1.length?"":"none";$("h2").style.display=g2.length?"":"none"}
   const d=LP().filter(p=>p.mrp>p.price&&!oos(p)).slice(0,8);$("deals").innerHTML=d.map(card).join("")||"<small>No deals right now</small>"}
  else{$("ct").textContent=cat||"Search";$("grid").innerHTML=LP().filter(p=>(!cat||p.category==cat)&&(p.name||"").toLowerCase().includes(s)).map(card).join("")||"No items in this category yet"}}
 function drawCart(){try{localStorage.lkc=JSON.stringify(cart)}catch(e){}const l=Object.values(cart),sub=l.reduce((a,b)=>a+b.price*b.q,0),fee=fe(sub),sv=l.reduce((a,b)=>a+Math.max((b.mrp||b.price)-b.price,0)*b.q,0);

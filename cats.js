@@ -1,5 +1,5 @@
 // G = Grocery & Kitchen tiles, SN = Snacks & Drinks tiles: [name, emoji]
-export const G=[["Fruits & Veg","🥦"],["Dairy & Eggs","🥛"],["Atta & Rice","🌾"],["Oil & Masala","🧂"],["Dal & Pulses","🫘"],["Bakery","🍞"],["Dry Fruits","🥜"],["Cleaning","🧴"]];
+export const G=[["Fruits & Veg","🥦"],["Dairy & Eggs","🥛"],["Atta & Rice","🌾"],["Oil & Masala","🧂"],["Dal & Pulses","🫘"],["Bakery","🍞"],["Dry Fruits","🥜"],["Cleaning","🧴"],["Sugar, Salt & Gud","🍬"],["Sauces & Spreads","🍯"],["Instant Food","🥣"],["Personal Care","🧼"],["Baby Care","🍼"],["Pooja Samagri","🪔"],["Stationery & More","✏️"]];
 export const SN=[["Chips & Namkeen","🍟"],["Biscuits","🍪"],["Chocolates","🍫"],["Cold Drinks","🥤"],["Juices","🧃"],["Tea & Coffee","☕"],["Noodles","🍜"],["Ice Cream","🍦"]];
 // DEMO = [name, unit, price, mrp, category]
 export const DEMO=[
